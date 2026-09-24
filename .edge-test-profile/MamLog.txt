@@ -1,0 +1,15 @@
+[2026-09-22T08:22:04.828Z] [INFO] ========================================================================================================================
+[2026-09-22T08:22:04.828Z] [INFO] Initializing MAM Client.
+App: com.microsoft.edge 153.0.4234.48
+SDK: 2.1.367.0
+OS: windows 10.0.26100.5074
+DeviceType: Desktop
+Manufacturer: Dell Inc.
+Model: Dell Pro 14 PC14250
+Telemetry: yes
+Managed device support: enabled
+[2026-09-22T08:22:04.828Z] [INFO] Telemetry session 9512c754-745e-448c-bd19-3b3b8cba1582.
+[2026-09-22T08:22:04.828Z] [INFO] Initializing cache (v1).
+[2026-09-22T08:22:12.209Z] [INFO] Shutting down.
+[2026-09-22T08:22:12.209Z] [INFO] Stopping the task scheduler and canceling any outstanding work items...
+[2026-09-22T08:22:12.209Z] [INFO] Task scheduler has stopped, and all work has been canceled.

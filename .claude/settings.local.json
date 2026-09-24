@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell($p = @\\(\"$env:ProgramFiles\\\\nodejs\\\\node.exe\", \"${env:ProgramFiles\\(x86\\)}\\\\nodejs\\\\node.exe\", \"$env:LOCALAPPDATA\\\\nvs\", \"$env:APPDATA\\\\npm\", \"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\\\\node.exe\"\\); foreach \\($x in $p\\) { if \\(Test-Path $x\\) { \"FOUND: $x\" } }; Get-Command deno, bun -ErrorAction SilentlyContinue | Select-Object Name, Source)",
+      "PowerShell($s='C:\\\\Users\\\\thanh.nhv\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Excel-Automation\\\\0e856bef-4a46-4fb9-9cab-98812d825546\\\\scratchpad'; python \"$s\\\\dump_mailsf.py\")",
+      "PowerShell(New-Item -ItemType Directory -Force 'D:\\\\Excel_Automation\\\\tool\\\\vendor' | Out-Null; New-Item -ItemType Directory -Force 'D:\\\\Excel_Automation\\\\tool\\\\src' | Out-Null; try { Invoke-WebRequest -Uri 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js' -OutFile 'D:\\\\Excel_Automation\\\\tool\\\\vendor\\\\xlsx.full.min.js' -UseBasicParsing -ErrorAction Stop; \"OK size=\" + \\(Get-Item 'D:\\\\Excel_Automation\\\\tool\\\\vendor\\\\xlsx.full.min.js'\\).Length } catch { \"FAILED: \" + $_.Exception.Message })",
+      "PowerShell(Get-Content 'D:\\\\Excel_Automation\\\\tool\\\\vendor\\\\xlsx.full.min.js' -TotalCount 1 | ForEach-Object { $_.Substring\\(0, 120\\) })",
+      "PowerShell($c = Get-Content 'D:\\\\Excel_Automation\\\\tool\\\\vendor\\\\xlsx.full.min.js' -Raw; \"len=$\\($c.Length\\)\"; $c.Substring\\(0,100\\))",
+      "PowerShell($s='C:\\\\Users\\\\thanh.nhv\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Excel-Automation\\\\0e856bef-4a46-4fb9-9cab-98812d825546\\\\scratchpad'; python \"$s\\\\verify_srctypes.py\")",
+      "PowerShell($s='C:\\\\Users\\\\thanh.nhv\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Excel-Automation\\\\0e856bef-4a46-4fb9-9cab-98812d825546\\\\scratchpad'; python \"$s\\\\show_rows.py\" \"D:\\\\Excel_Automation\\\\Data\\\\input\\\\File báo cáo tổng_AltiuslinkVN_Daily Report_\\(New\\)-20260913.xlsx\" \"3. Other Tasks & Working time\" \"5,6,7\")",
+      "PowerShell($c = @\\(\"$env:ProgramFiles\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe\",\"${env:ProgramFiles\\(x86\\)}\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe\",\"$env:ProgramFiles\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\",\"${env:ProgramFiles\\(x86\\)}\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe\"\\); foreach \\($x in $c\\) { if \\(Test-Path $x\\) { \"FOUND: $x\" } })"
+    ]
+  }
+}

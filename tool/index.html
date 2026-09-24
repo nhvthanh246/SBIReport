@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo ngày CCVN</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <h1>SBI Report Tool</h1>
+
+  </header>
+
+  <!-- ============ 1. NẠP FILE ============ -->
+  <section class="card" id="sec-input">
+    <div class="eyebrow">Nạp file</div>
+
+    <label class="dropzone" id="dz">
+      <div class="dz-icon">📥</div>
+      <div class="dz-main">Kéo cả 4 file vào đây</div>
+      <div class="dz-sub">hoặc bấm để chọn — tool tự nhận biết từng loại file</div>
+      <input type="file" id="dz-input" accept=".xlsx,.xlsm,.xls" multiple>
+    </label>
+
+    <div class="needs" id="needs"></div>
+
+    <div class="row" style="margin-top:18px">
+      <button id="btn-run" class="primary" disabled>Xử lý</button>
+      <button id="btn-reset" class="quiet">Xoá hết</button>
+      <span id="busy" class="busy hidden"><span class="spin"></span><span id="busy-text"></span></span>
+    </div>
+  </section>
+
+  <!-- ============ 2. KẾT QUẢ ============ -->
+  <div id="stale-note" class="hidden"></div>
+
+  <section class="card hidden" id="sec-result">
+    <div class="result-head">
+      <div>
+        <div class="rh-date" id="rh-date">—</div>
+        <div class="rh-sub" id="rh-sub"></div>
+      </div>
+      <div class="rh-ctl">
+        <label class="lbl" for="report-date">Đổi ngày</label>
+        <input type="date" id="report-date">
+        <button id="btn-redate" class="sm">Áp dụng</button>
+      </div>
+    </div>
+
+    <div class="metrics" id="metrics"></div>
+
+    <label class="opt-row" id="opt-swapped">
+      <input type="checkbox" id="accept-swapped">
+      <span class="o-body">
+        <span class="o-t">Nhận cả dòng bị <strong>đảo ngày/tháng</strong> trong file nhân viên</span>
+        <span class="o-d" id="opt-swapped-d">Lỗi locale lúc nhập liệu. Chỉ ảnh hưởng báo cáo ngày 1–12.</span>
+      </span>
+    </label>
+
+    <div class="issue-group" id="issues"></div>
+  </section>
+
+  <!-- ============ 3. XUẤT FILE ============ -->
+  <section class="card hidden" id="sec-export">
+    <div class="eyebrow">Xuất file</div>
+    <div id="cta-master"></div>
+    <div id="patch-report" class="hidden" style="margin-top:14px"></div>
+
+    <details class="fold" id="fold-extra">
+      <summary>Tệp phụ — file đã làm sạch và 3 khối dán tay</summary>
+      <p class="hint" style="margin-top:6px">
+        Chỉ cần khi muốn tự dán vào <em>File báo cáo tổng</em>. Nút <strong>Copy</strong> đưa dữ liệu vào
+        clipboard, bấm đúng ô neo rồi Ctrl+V. Bản <code>.xlsx</code> là bản chuẩn, không mất kiểu dữ liệu.
+      </p>
+      <div id="outputs"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="btn-all" class="sm">Tải cả 3 khối trong 1 file</button>
+      </div>
+    </details>
+  </section>
+
+  <!-- ============ NÂNG CAO ============ -->
+  <details class="panel hidden" id="sec-preview">
+    <summary>Xem trước dữ liệu</summary>
+    <div class="pbody">
+      <div class="row" style="margin-bottom:10px">
+        <label class="lbl" for="preview-pick">Khối</label>
+        <select id="preview-pick"></select>
+        <span class="lbl" id="preview-count"></span>
+      </div>
+      <div class="scrollx"><table class="preview" id="preview-table"></table></div>
+    </div>
+  </details>
+
+  <details class="panel" id="sec-compare">
+    <summary>Đối chứng với file tổng chuẩn</summary>
+    <div class="pbody">
+      <p class="hint">
+        Nạp một <strong>bản đúng đã biết</strong> của ngày đang làm — ví dụ file do team làm tay
+        hôm đó. Tool sẽ sinh file rồi so từng ô với bản đúng, chỉ ở những chỗ tool thực sự ghi.
+        Các ô nhập tay không tính vào. Có kiểm tra thêm rằng lịch sử các ngày trước không bị đụng.
+      </p>
+      <div class="needs" id="needs-compare"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="btn-compare" class="primary sm">Chạy đối chứng</button>
+        <span class="lbl">Cần đã bấm <strong>Xử lý</strong> và có nạp file tổng ở bước 1.</span>
+      </div>
+      <div id="compare-results" style="margin-top:12px"></div>
+    </div>
+  </details>
+
+  <details class="panel" id="sec-test">
+    <summary>Tự kiểm chứng với dữ liệu mẫu</summary>
+    <div class="pbody">
+      <p class="hint">
+        Nạp thêm 2 file kết quả mẫu trong <code>Data/output/</code>, tool chạy lại đúng pipeline rồi
+        so từng ô. Dùng mỗi khi nguồn dữ liệu đổi định dạng.
+      </p>
+      <div class="needs" id="needs-test"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="btn-test" class="primary sm">Chạy kiểm chứng</button>
+      </div>
+      <div id="test-results" style="margin-top:12px"></div>
+    </div>
+  </details>
+
+  <details class="panel" id="sec-config">
+    <summary>Cấu hình ánh xạ</summary>
+    <div class="pbody">
+      <p class="hint">
+        Luật lọc, ánh xạ cột, ô neo và bảng email. Lưu trong trình duyệt này.
+        Khi web nguồn đổi tên cột thì sửa ở đây, không cần sửa code.
+      </p>
+      <div class="row" style="margin-bottom:10px">
+        <button id="btn-cfg-save" class="primary sm">Lưu</button>
+        <button id="btn-cfg-reset" class="sm">Khôi phục mặc định</button>
+        <button id="btn-cfg-export" class="sm">Xuất .json</button>
+        <button id="btn-cfg-import-proxy" class="sm">Nhập .json</button>
+        <input type="file" id="cfg-import" accept=".json" class="hidden">
+        <button id="btn-cfg-mailsf" class="sm">Nạp bảng email từ file tổng</button>
+        <span id="cfg-status" class="lbl"></span>
+      </div>
+      <textarea id="cfg-text" rows="20" spellcheck="false"></textarea>
+    </div>
+  </details>
+</div>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/fflate.min.js"></script>
+<script src="src/config.js"></script>
+<script src="src/parse.js"></script>
+<script src="src/pipeline.js"></script>
+<script src="src/writer.js"></script>
+<script src="src/xlsxpatch.js"></script>
+<script src="src/selftest.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+2026-09-22 08:22:03.135: [INFO] CurrentProfilePath: D:\Excel_Automation\.edge-test-profile\Default
+2026-09-22 08:22:03.135: [INFO] Profiles total count: 1
+2026-09-22 08:22:03.135: [INFO] Profile: name=Profile 1 path=D:\Excel_Automation\.edge-test-profile\Default lastActive=2026-09-22T08:22:03.118Z
+2026-09-22 08:22:03.135: [INFO] LastUsedProfileDir: D:\Excel_Automation\.edge-test-profile\Default
+2026-09-22 08:22:03.135: [INFO] MostRecentlyActiveProfile: name=Profile 1 path=D:\Excel_Automation\.edge-test-profile\Default lastActive=2026-09-22T08:22:03.118Z
+2026-09-22 08:22:03.135: [INFO] OnDoneLoading sync enabled: 0
+2026-09-22 08:22:03.135: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2026-09-22 08:22:03.135: [INFO] BookmarksLoadDropped droppedNodes=0
+2026-09-22 08:22:03.135: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-09-22 08:22:03.138: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-22 08:22:03.357: [INFO] VisibilityChanged: 0
+2026-09-22 08:22:04.824: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-09-22 08:22:04.827: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 3
+2026-09-22 08:22:04.831: [INFO] Primary account changed.
+2026-09-22 08:22:04.831: [INFO] OnPrimaryAccountChanged PrimaryAccountChangeEvent::Type::kSet
+2026-09-22 08:22:04.841: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 3
+2026-09-22 08:22:04.856: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 3
+2026-09-22 08:22:06.022: [INFO] BookmarkNodeAdded, ABU: 0
+2026-09-22 08:22:06.024: [INFO] BookmarkNodeAdded, ABU: 0
+2026-09-22 08:22:06.024: [INFO] BookmarkNodeAdded, ABU: 0
+2026-09-22 08:22:06.024: [INFO] BookmarkNodeAdded, ABU: 0
+2026-09-22 08:22:06.951: [INFO] BookmarkNodeAdded, ABU: 0
+2026-09-22 08:22:06.951: [INFO] BookmarkNodeMoved
+2026-09-22 08:22:06.951: [INFO] BookmarkNodeMoved
+2026-09-22 08:22:06.951: [INFO] BookmarkNodeMoved
+2026-09-22 08:22:06.951: [INFO] ReorderChildren, Url: 0, IsFolder: 1, IsWorkspace: 0
+2026-09-22 08:22:06.951: [INFO] Remove, DeletionOrigin: 19
+2026-09-22 08:22:06.952: [INFO] BookmarkNodeRemoved, Url: 0, IsFolder: 1, IsWorkspace: 0
+2026-09-22 08:22:06.952: [INFO] BookmarkNodeAdded, ABU: 0
+2026-09-22 08:22:06.952: [INFO] Remove, DeletionOrigin: 19
+2026-09-22 08:22:06.952: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2026-09-22 08:22:06.952: [INFO] BookmarkNodeAdded, ABU: 0
+2026-09-22 08:22:06.952: [INFO] Remove, DeletionOrigin: 19
+2026-09-22 08:22:06.952: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2026-09-22 08:22:06.952: [INFO] BookmarkNodeAdded, ABU: 0
+2026-09-22 08:22:06.952: [INFO] Remove, DeletionOrigin: 19
+2026-09-22 08:22:06.952: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2026-09-22 08:22:07.634: [INFO] Sync initialization duration: 2713ms
+2026-09-22 08:22:12.306: [INFO] BookmarksSnapshot Shutdown total=3 bar=1 other=0 mobile=0 showBar=0 showBarNTP=1

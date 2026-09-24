@@ -1,0 +1,524 @@
+/* Ghi dữ liệu vào File báo cáo tổng bằng cách sửa thẳng XML trong file zip.
+ *
+ * Vì sao không dùng SheetJS để ghi cả workbook: file tổng có 4 PivotTable,
+ * 4 pivotCache (~1.7MB), externalLinks, conditionalFormatting, customXml và hàng
+ * nghìn công thức ở các sheet khác. Đọc rồi ghi lại bằng bất kỳ thư viện JS nào
+ * cũng làm mất phần lớn số đó.
+ *
+ * Cách làm ở đây: giải nén zip, CHỈ thay <sheetData> của 3 sheet dữ liệu, giữ
+ * nguyên byte của 54 part còn lại, rồi nén lại. Định dạng ô được giữ bằng cách
+ * dùng lại đúng thuộc tính `s` của ô cũ ở cùng vị trí.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(root.Parse);
+  else root.XlsxPatch = factory(root.Parse);
+})(typeof self !== 'undefined' ? self : this, function (P) {
+  'use strict';
+
+  var ROW_RE = /<row\b[^>]*\/>|<row\b[^>]*>[\s\S]*?<\/row>/g;
+  var CELL_RE = /<c\b[^>]*\/>|<c\b[^>]*>[\s\S]*?<\/c>/g;
+  /* XML 1.0 không cho phép các ký tự điều khiển này; \t \n \r thì hợp lệ */
+  var BAD_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F]/g;
+
+  function esc(s) {
+    return String(s).replace(BAD_CHARS, '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function unesc(s) {
+    return String(s).replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+  }
+  function getAttr(tag, name) {
+    var m = tag.match(new RegExp('\\s' + name + '="([^"]*)"'));
+    return m ? m[1] : null;
+  }
+
+  function colToNum(s) {
+    var n = 0;
+    for (var i = 0; i < s.length; i++) n = n * 26 + (s.charCodeAt(i) - 64);
+    return n - 1;
+  }
+  function numToCol(n) {
+    var s = '';
+    n += 1;
+    while (n > 0) { var r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = (n - r - 1) / 26; }
+    return s;
+  }
+  function parseAddr(a) {
+    var m = a.match(/^([A-Z]+)(\d+)$/);
+    return { c: colToNum(m[1]), r: parseInt(m[2], 10) };
+  }
+  function setRangeEndRow(ref, endRow) {
+    var m = ref.match(/^(\$?[A-Z]+\$?\d+):(\$?[A-Z]+)\$?\d+$/);
+    return m ? m[1] + ':' + m[2] + endRow : ref;
+  }
+
+  /* ---------- sinh XML cho một ô ---------- */
+  function emitCell(addr, style, value, type, formula) {
+    var s = (style === null || style === undefined) ? '' : ' s="' + style + '"';
+    var blank = (value === '' || value === null || value === undefined);
+
+    if (formula) {
+      var numeric = !blank && isFinite(Number(value)) &&
+                    (type === 'number' || type === 'date' || typeof value === 'number');
+      var vTag = blank ? '' : '<v>' + esc(numeric ? Number(value) : value) + '</v>';
+      return '<c r="' + addr + '"' + s + (numeric || blank ? '' : ' t="str"') +
+             '><f>' + esc(formula) + '</f>' + vTag + '</c>';
+    }
+    if (blank) return '<c r="' + addr + '"' + s + '/>';
+
+    if (type === 'date' || type === 'number' || (type === 'auto' && typeof value === 'number')) {
+      var n = Number(value);
+      if (isFinite(n)) return '<c r="' + addr + '"' + s + '><v>' + n + '</v></c>';
+    }
+    /* Dùng inlineStr để khỏi phải đụng vào sharedStrings.xml (660KB, dùng chung
+       với mọi sheet khác). xml:space="preserve" để giữ khoảng trắng/tab đầu chuỗi
+       như giá trị ma_kh "\t A0011242503". */
+    return '<c r="' + addr + '"' + s + ' t="inlineStr"><is><t xml:space="preserve">' +
+           esc(P.cellToString(value)) + '</t></is></c>';
+  }
+
+  /* ---------- vá <sheetData> của một sheet ---------- */
+  function patchSheet(xml, spec, report) {
+    var open = xml.indexOf('<sheetData');
+    if (open === -1) throw new Error('Sheet "' + spec.sheetName + '": không có <sheetData>');
+    var gt = xml.indexOf('>', open);
+    var selfClosing = xml[gt - 1] === '/';
+    var headEnd = gt + 1;
+    var tailStart, body;
+    if (selfClosing) {
+      body = '';
+      tailStart = headEnd;
+    } else {
+      tailStart = xml.lastIndexOf('</sheetData>');
+      body = xml.slice(headEnd, tailStart);
+      tailStart += '</sheetData>'.length;
+    }
+
+    /* tách các <row> */
+    var rows = [], m;
+    ROW_RE.lastIndex = 0;
+    while ((m = ROW_RE.exec(body)) !== null) {
+      var raw = m[0];
+      var ot = raw.slice(0, raw.indexOf('>') + 1);
+      var num = parseInt(getAttr(ot, 'r'), 10);
+      var innerStart = raw.indexOf('>') + 1;
+      var inner = raw.slice(-2) === '/>' ? '' : raw.slice(innerStart, raw.lastIndexOf('</row>'));
+      rows.push({ num: num, openTag: ot, inner: inner, raw: raw });
+    }
+    var byNum = {};
+    rows.forEach(function (r) { byNum[r.num] = r; });
+
+    var a = parseAddr(spec.anchor);
+    var anchorRow = a.r, startCol = a.c;
+    var nCols = spec.types.length;
+    var endCol = startCol + nCols - 1;
+
+    var tpl = byNum[anchorRow];
+    if (!tpl) throw new Error('Sheet "' + spec.sheetName + '": không có dòng ' + anchorRow +
+      ' để lấy mẫu định dạng');
+
+    /* bản đồ style theo cột, lấy từ dòng mẫu */
+    function cellsOf(row) {
+      var out = {};
+      if (!row) return out;
+      var cm;
+      CELL_RE.lastIndex = 0;
+      while ((cm = CELL_RE.exec(row.inner)) !== null) {
+        var craw = cm[0];
+        var ct = craw.slice(0, craw.indexOf('>') + 1);
+        var ref = getAttr(ct, 'r');
+        if (!ref) continue;
+        out[parseAddr(ref).c] = { raw: craw, s: getAttr(ct, 's') };
+      }
+      return out;
+    }
+    var tplCells = cellsOf(tpl);
+
+    var lastExisting = rows.length ? rows[rows.length - 1].num : anchorRow;
+    var dataCount = spec.rows.length;
+    var lastData = anchorRow + dataCount - 1;
+    var lastOut = Math.max(lastData, lastExisting);
+
+    var out = [];
+    rows.forEach(function (r) { if (r.num < anchorRow) out.push(r.raw); });
+
+    var cleared = 0, created = 0;
+    for (var r = anchorRow; r <= lastOut; r++) {
+      var idx = r - anchorRow;
+      var orig = byNum[r];
+      var hasData = idx < dataCount;
+
+      /* Dòng trống sẵn, nằm ngoài vùng dữ liệu mới -> giữ nguyên, khỏi dựng lại */
+      if (!hasData && orig && orig.inner.indexOf('<v>') === -1 && orig.inner.indexOf('<f') === -1) {
+        out.push(orig.raw);
+        continue;
+      }
+      if (!hasData && !orig) continue;
+      if (!hasData) cleared++;
+      if (!orig) created++;
+
+      var oc = cellsOf(orig);
+      var cols = {};
+      Object.keys(oc).forEach(function (k) { cols[k] = true; });
+      for (var c = startCol; c <= endCol; c++) cols[c] = true;
+      var list = Object.keys(cols).map(Number).sort(function (x, y) { return x - y; });
+
+      var inner = list.map(function (c) {
+        if (c < startCol || c > endCol) {
+          /* ngoài vùng khối -> giữ nguyên ô cũ */
+          return oc[c] ? oc[c].raw : '';
+        }
+        var bi = c - startCol;
+        var style = oc[c] ? oc[c].s : (tplCells[c] ? tplCells[c].s : null);
+        var value = hasData ? spec.rows[idx][bi] : '';
+        var f = null;
+        if (hasData && spec.formulas && spec.formulas[bi]) {
+          f = spec.formulas[bi](r, value, idx);
+        }
+        return emitCell(numToCol(c) + r, style, value, spec.types[bi], f);
+      }).join('');
+
+      var ot2 = orig ? orig.openTag : tpl.openTag.replace(/\sr="\d+"/, ' r="' + r + '"');
+      out.push(ot2.slice(-2) === '/>' ? ot2.slice(0, -2) + '>' + inner + '</row>'
+                                      : ot2 + inner + '</row>');
+    }
+
+    var head = xml.slice(0, headEnd);
+    if (selfClosing) head = head.slice(0, head.lastIndexOf('/>')) + '>';
+    var tail = xml.slice(tailStart);
+
+    /* dimension bao hết dòng đang có; autoFilter bám đúng vùng dữ liệu */
+    head = head.replace(/<dimension ref="([^"]*)"\/>/, function (mm, ref) {
+      return '<dimension ref="' + setRangeEndRow(ref, lastOut) + '"/>';
+    });
+    tail = tail.replace(/<autoFilter ref="([^"]*)"/, function (mm, ref) {
+      return '<autoFilter ref="' + setRangeEndRow(ref, Math.max(lastData, anchorRow)) + '"';
+    });
+
+    /* Bỏ hyperlink cũ: Excel tự tạo link mailto theo địa chỉ ô, sau khi thay dữ
+       liệu thì chúng trỏ sang email của dòng khác. Phần .rels để nguyên (quan hệ
+       không được tham chiếu là hợp lệ). */
+    var hl = tail.match(/<hyperlinks>[\s\S]*?<\/hyperlinks>/);
+    if (hl) {
+      tail = tail.replace(hl[0], '');
+      report.push('  ' + spec.sheetName + ': bỏ ' +
+        (hl[0].match(/<hyperlink /g) || []).length + ' hyperlink cũ đã trỏ sai dòng');
+    }
+
+    report.push('  ' + spec.sheetName + ': ghi ' + dataCount + ' dòng (' + spec.anchor +
+      ' → ' + numToCol(endCol) + lastData + ')' +
+      (cleared ? ', xoá dữ liệu cũ ở ' + cleared + ' dòng' : '') +
+      (created ? ', thêm mới ' + created + ' dòng' : ''));
+
+    return head + out.join('') + '</sheetData>' + tail;
+  }
+
+  /* ---------- vá từng ô lẻ (dùng cho cột ngày ở sheet tổng hợp) ---------- */
+
+  function rowInner(xml, rowNum) {
+    var re = new RegExp('<row\\b[^>]*\\sr="' + rowNum + '"[^>]*>[\\s\\S]*?</row>');
+    var m = xml.match(re);
+    return m ? { raw: m[0], inner: m[0].slice(m[0].indexOf('>') + 1, m[0].lastIndexOf('</row>')) } : null;
+  }
+
+  /** Tìm cột có giá trị số bằng `serial` trên dòng header ngày. */
+  function findDayColumn(xml, rowNum, serial) {
+    var row = rowInner(xml, rowNum);
+    if (!row) return -1;
+    var cm;
+    CELL_RE.lastIndex = 0;
+    while ((cm = CELL_RE.exec(row.inner)) !== null) {
+      var craw = cm[0];
+      var ct = craw.slice(0, craw.indexOf('>') + 1);
+      var t = getAttr(ct, 't');
+      if (t === 's' || t === 'inlineStr' || t === 'str') continue;
+      var vm = craw.match(/<v>([^<]*)<\/v>/);
+      if (vm && Math.round(parseFloat(vm[1])) === serial) {
+        return parseAddr(getAttr(ct, 'r')).c;
+      }
+    }
+    return -1;
+  }
+
+  /** edits: [{ row, col, value, type, formula }] — giữ nguyên style ô cũ. */
+  function patchCells(xml, edits) {
+    var byRow = {};
+    edits.forEach(function (e) { (byRow[e.row] = byRow[e.row] || []).push(e); });
+
+    Object.keys(byRow).forEach(function (rk) {
+      var rowNum = parseInt(rk, 10);
+      var row = rowInner(xml, rowNum);
+      if (!row) return;
+
+      var cells = [], cm;
+      CELL_RE.lastIndex = 0;
+      while ((cm = CELL_RE.exec(row.inner)) !== null) {
+        var craw = cm[0];
+        var ct = craw.slice(0, craw.indexOf('>') + 1);
+        cells.push({ col: parseAddr(getAttr(ct, 'r')).c, raw: craw, s: getAttr(ct, 's') });
+      }
+
+      byRow[rk].forEach(function (e) {
+        var found = null;
+        for (var i = 0; i < cells.length; i++) { if (cells[i].col === e.col) { found = cells[i]; break; } }
+        var style = found ? found.s : null;
+        var xmlCell = emitCell(numToCol(e.col) + rowNum, style, e.value, e.type, e.formula);
+        if (found) found.raw = xmlCell;
+        else cells.push({ col: e.col, raw: xmlCell, s: null });
+      });
+
+      cells.sort(function (a, b) { return a.col - b.col; });
+      var open = row.raw.slice(0, row.raw.indexOf('>') + 1);
+      xml = xml.replace(row.raw, open + cells.map(function (c) { return c.raw; }).join('') + '</row>');
+    });
+    return xml;
+  }
+
+  /** Điền các chỉ tiêu tính được vào cột ngày của sheet Summarize_team VietNam. */
+  function patchSummary(xml, summary, cfg, reportSerial, report) {
+    var sc = cfg.summary;
+    if (!sc || !summary) return xml;
+
+    var col = findDayColumn(xml, sc.dayHeaderRow, reportSerial);
+    if (col === -1) {
+      report.push('  ' + sc.sheet + ': KHÔNG tìm thấy cột cho ngày ' + reportSerial +
+        ' (dòng ' + sc.dayHeaderRow + ') — bỏ qua phần tổng hợp');
+      return xml;
+    }
+    var colName = numToCol(col);
+
+    var edits = [], filled = [];
+    (sc.cells || []).forEach(function (spec) {
+      if (spec.from === 'customerFormula') {
+        var c = summary.counts;
+        var cached = summary.distinct + (c.zalo || 0) + (c.viber || 0) + (c.line || 0) + (c.tel || 0);
+        var f = (sc.customerFormula || '{distinct}+SUM({col}13:{col}16)')
+          .replace(/\{distinct\}/g, summary.distinct)
+          .replace(/\{col\}/g, colName);
+        edits.push({ row: spec.row, col: col, value: cached, type: 'number', formula: f });
+        filled.push(spec.label + '=' + cached + ' (=' + f + ')');
+      } else {
+        var v = summary.counts[spec.from];
+        if (v === undefined) return;
+        edits.push({ row: spec.row, col: col, value: v, type: 'number', formula: null });
+        filled.push(spec.label + '=' + v);
+      }
+    });
+
+    xml = patchCells(xml, edits);
+    report.push('  ' + sc.sheet + ': điền cột ' + colName + ' (ngày ' + reportSerial + ') — ' +
+      filled.join(', '));
+    return xml;
+  }
+
+  /** Đọc cột email của một sheet trong workbook đã parse -> {emailChuẩnHoá: dòng}. */
+  function emailRows(wb, sheetName, emailCol, r0, r1) {
+    var out = {};
+    if (!wb) return out;
+    var ws = wb.Sheets[sheetName];
+    if (!ws) return out;
+    var m = P.sheetToMatrix(ws);
+    for (var r = r0 - 1; r < Math.min(m.rows.length, r1); r++) {
+      var v = P.cellToString((m.rows[r] || [])[emailCol]).trim();
+      if (v.indexOf('@') !== -1) out[P.normText(v)] = r + 1;
+    }
+    return out;
+  }
+
+  /**
+   * Ghi hiệu suất công việc vào sheet KPI tháng, và cập nhật ô ngày của cả 2 sheet KPI.
+   * Chỉ ghi cho người có trong danh sách OP của "Daily KPI Result" — mấy dòng
+   * JP Staff / tài khoản khác trong sheet tháng do nguồn khác điền, không đụng vào.
+   */
+  function patchKpi(files, sheetPart, readText, writeText, blocks, cfg, masterWb, report) {
+    var kc = cfg.kpi;
+    if (!kc || !blocks.kpi) return;
+    var serial = blocks.reportSerial;
+
+    /* --- ô ngày của Daily KPI Result --- */
+    var dPart = sheetPart[kc.daily.sheet];
+    if (dPart && files[dPart] && kc.daily.dateCell) {
+      var a = parseAddr(kc.daily.dateCell);
+      writeText(dPart, patchCells(readText(dPart),
+        [{ row: a.r, col: a.c, value: serial, type: 'date', formula: null }]));
+      report.push('  ' + kc.daily.sheet + ': cập nhật ô ngày ' + kc.daily.dateCell + ' = ' + serial);
+    }
+
+    /* --- danh sách OP lấy từ Daily KPI Result --- */
+    var opRows = emailRows(masterWb, kc.daily.sheet, kc.daily.emailColumn,
+      kc.daily.dataStartRow, kc.daily.dataEndRow);
+    var opEmails = Object.keys(opRows);
+    if (!opEmails.length) {
+      report.push('  KPI: không đọc được danh sách OP từ "' + kc.daily.sheet + '" — bỏ qua sheet KPI tháng');
+      return;
+    }
+
+    /* --- sheet KPI tháng, dò theo mẫu tên vì tên đổi theo tháng --- */
+    var re = new RegExp(kc.monthly.sheetPattern, 'i');
+    var mName = Object.keys(sheetPart).filter(function (n) { return re.test(n); })[0];
+    if (!mName) {
+      report.push('  KPI: không tìm thấy sheet khớp mẫu /' + kc.monthly.sheetPattern + '/ — bỏ qua');
+      return;
+    }
+    var mPart = sheetPart[mName];
+    var xml = readText(mPart);
+
+    var col = findDayColumn(xml, kc.monthly.dayHeaderRow, serial);
+    if (col === -1) {
+      report.push('  ' + mName + ': không có cột cho ngày ' + serial +
+        ' (dòng ' + kc.monthly.dayHeaderRow + ') — bỏ qua');
+      return;
+    }
+
+    var rowsOf = emailRows(masterWb, mName, kc.monthly.emailColumn,
+      kc.monthly.dataStartRow, kc.monthly.dataEndRow);
+    var edits = [], written = 0, skipped = [];
+    Object.keys(rowsOf).forEach(function (e) {
+      if (!opRows[e]) { skipped.push(e); return; }
+      var k = blocks.kpi.forEmail(e);
+      edits.push({ row: rowsOf[e], col: col, value: k.W, type: 'number', formula: null });
+      written++;
+    });
+
+    /* dòng tổng team = tính từ SUM của cả nhóm OP, không phải trung bình các W */
+    if (kc.monthly.teamRow) {
+      edits.push({ row: kc.monthly.teamRow, col: col,
+        value: blocks.kpi.team(opEmails), type: 'number', formula: null });
+    }
+    if (kc.monthly.dateCell) {
+      var b = parseAddr(kc.monthly.dateCell);
+      edits.push({ row: b.r, col: b.c, value: serial, type: 'date', formula: null });
+    }
+
+    writeText(mPart, patchCells(xml, edits));
+    report.push('  ' + mName + ': điền cột ' + numToCol(col) + ' (ngày ' + serial + ') — ' +
+      written + ' người' + (kc.monthly.teamRow ? ' + dòng tổng' : '') +
+      (skipped.length ? ', bỏ qua ' + skipped.length + ' dòng không có trong "' +
+        kc.daily.sheet + '" (' + skipped.join(', ') + ')' : ''));
+  }
+
+  /* ---------- điểm vào ---------- */
+  function patch(masterBytes, blocks, cfg, opts) {
+    opts = opts || {};
+    if (typeof fflate === 'undefined') throw new Error('Thiếu thư viện fflate');
+    var report = [];
+    var files = fflate.unzipSync(masterBytes);
+    var names = Object.keys(files);
+    var originalCount = names.length;
+
+    function readText(n) { return fflate.strFromU8(files[n]); }
+    function writeText(n, s) { files[n] = fflate.strToU8(s); }
+
+    /* sheet name -> đường dẫn part */
+    var wbXml = readText('xl/workbook.xml');
+    var relsXml = readText('xl/_rels/workbook.xml.rels');
+    var rel = {};
+    (relsXml.match(/<Relationship\b[^>]*\/>/g) || []).forEach(function (t) {
+      var id = getAttr(t, 'Id'), tgt = getAttr(t, 'Target');
+      if (id && tgt) rel[id] = tgt.charAt(0) === '/' ? tgt.slice(1) : 'xl/' + tgt.replace(/^\.\//, '');
+    });
+    var sheetPart = {};
+    (wbXml.match(/<sheet\b[^>]*\/>/g) || []).forEach(function (t) {
+      var nm = unesc(getAttr(t, 'name') || '');
+      var id = getAttr(t, 'r:id') || getAttr(t, 'id');
+      if (nm && rel[id]) sheetPart[nm] = rel[id];
+    });
+
+    /* công thức giữ nguyên như file gốc */
+    var fm = (cfg.masterFormulas || {});
+    var emailF = fm.sfcaseEmail || "VLOOKUP($F{row},'mail SF'!$C$3:$D$69,2,0)";
+    var totalF = fm.otherTotal || 'SUM(G{row}:M{rowEnd})';
+    var blockSize = (cfg.op && cfg.op.other && cfg.op.other.blockSize) || 8;
+
+    var specs = [
+      { block: blocks.block1, formulas: null },
+      { block: blocks.block2, formulas: {
+          5: function (row) { return emailF.replace(/\{row\}/g, row); }
+        } },
+      { block: blocks.block3, formulas: {
+          /* SUM chỉ đặt ở dòng đầu mỗi khối supporter, giống file gốc */
+          3: function (row, value, idx) {
+            if (idx % blockSize !== 0) return null;
+            return totalF.replace(/\{row\}/g, row).replace(/\{rowEnd\}/g, row + blockSize - 1);
+          }
+        } }
+    ];
+
+    specs.forEach(function (sp) {
+      var b = sp.block;
+      if (!b || !b.rows.length) {
+        report.push('  ' + b.sheet + ': bỏ qua (không có dữ liệu)');
+        return;
+      }
+      var part = sheetPart[b.sheet];
+      if (!part || !files[part]) {
+        throw new Error('File báo cáo tổng không có sheet "' + b.sheet + '"');
+      }
+      writeText(part, patchSheet(readText(part), {
+        sheetName: b.sheet, anchor: b.anchor, rows: b.rows,
+        types: b.types, formulas: sp.formulas
+      }, report));
+    });
+
+    /* Cột ngày ở sheet tổng hợp (cộng dồn cả tháng, không bị thay như 3 sheet dữ liệu) */
+    if (cfg.summary && blocks.summary) {
+      var sPart = sheetPart[cfg.summary.sheet];
+      if (!sPart || !files[sPart]) {
+        report.push('  ' + cfg.summary.sheet + ': không có sheet này — bỏ qua phần tổng hợp');
+      } else {
+        writeText(sPart, patchSummary(readText(sPart), blocks.summary, cfg,
+          blocks.reportSerial, report));
+      }
+    }
+
+    /* KPI ngày + KPI tháng */
+    patchKpi(files, sheetPart, readText, writeText, blocks, cfg, opts.masterWb, report);
+
+    /* Bắt Excel tính lại toàn bộ công thức khi mở */
+    if (/<calcPr\b[^>]*\/>/.test(wbXml)) {
+      wbXml = wbXml.replace(/<calcPr\b([^>]*?)\/>/, function (mm, at) {
+        return '<calcPr' + at.replace(/\s*fullCalcOnLoad="[^"]*"/, '') + ' fullCalcOnLoad="1"/>';
+      });
+    } else {
+      wbXml = wbXml.replace('</workbook>', '<calcPr fullCalcOnLoad="1"/></workbook>');
+    }
+    writeText('xl/workbook.xml', wbXml);
+    report.push('  workbook: bật tính lại công thức khi mở (fullCalcOnLoad)');
+
+    /* Pivot tự refresh khi mở, vì pivotCache đang giữ dữ liệu của ngày cũ */
+    var nPivot = 0;
+    names.forEach(function (n) {
+      if (n.indexOf('pivotCacheDefinition') === -1 || n.indexOf('.rels') !== -1) return;
+      var x = readText(n).replace(/<pivotCacheDefinition\b([^>]*?)>/, function (mm, at) {
+        return '<pivotCacheDefinition' + at.replace(/\s*refreshOnLoad="[^"]*"/, '') +
+               ' refreshOnLoad="1">';
+      });
+      writeText(n, x);
+      nPivot++;
+    });
+    if (nPivot) report.push('  pivot: bật refreshOnLoad cho ' + nPivot + ' pivotCache');
+
+    /* calcChain trỏ tới ô theo thứ tự cũ; giữ lại sẽ làm Excel báo file hỏng.
+       Xoá đi thì Excel tự dựng lại. */
+    if (files['xl/calcChain.xml']) {
+      delete files['xl/calcChain.xml'];
+      writeText('[Content_Types].xml',
+        readText('[Content_Types].xml').replace(/<Override[^>]*calcChain\.xml[^>]*\/>/g, ''));
+      writeText('xl/_rels/workbook.xml.rels',
+        readText('xl/_rels/workbook.xml.rels')
+          .replace(/<Relationship\b[^>]*Target="calcChain\.xml"[^>]*\/>/g, ''));
+      report.push('  calcChain.xml: đã xoá (Excel tự dựng lại khi mở)');
+    }
+
+    /* Nén lại, giữ nguyên thứ tự part gốc */
+    var ordered = {};
+    names.forEach(function (n) { if (files[n]) ordered[n] = files[n]; });
+    var bytes = fflate.zipSync(ordered, { level: 6, mtime: new Date() });
+
+    report.push('  zip: giữ ' + Object.keys(ordered).length + '/' + originalCount + ' part');
+    return { bytes: bytes, report: report, partCount: Object.keys(ordered).length };
+  }
+
+  return { patch: patch, numToCol: numToCol, colToNum: colToNum, parseAddr: parseAddr };
+});
