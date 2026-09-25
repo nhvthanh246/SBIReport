@@ -525,7 +525,9 @@
 
     if (cfg.summary && blocks.summary) {
       var sumRows = (cfg.summary.cells || []).map(function (c) { return c.row; })
-        .concat((cfg.summary.topicRows || []).map(function (c) { return c.row; }));
+        .concat((cfg.summary.topicRows || []).map(function (c) { return c.row; }))
+        /* dòng fanpage: chỉ so những dòng lần chạy này thực sự ghi */
+        .concat((opts && opts.fanpageRows) || []);
       checks.push(diffDayColumn('4. Cột ngày "' + cfg.summary.sheet + '"', outWb, refWb,
         cfg.summary.sheet, cfg.summary.dayHeaderRow, blocks.reportSerial, sumRows));
     }

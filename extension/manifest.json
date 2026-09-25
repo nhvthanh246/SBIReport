@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Facebook Fanpage Stats - AltiuslinkVN",
+  "version": "1.4.0",
+  "description": "Lấy Follow của SBIR, SMILES, DCOM và sao chép theo đúng sáu dòng của Excel.",
+  "permissions": ["storage", "tabs", "scripting", "debugger"],
+  "host_permissions": ["https://www.facebook.com/*", "https://m.facebook.com/*"],
+  "action": {
+    "default_title": "Lấy số liệu fanpage",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.facebook.com/*", "https://m.facebook.com/*"],
+      "js": ["parser.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

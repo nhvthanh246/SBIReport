@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fanpage Stats</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <p class="eyebrow">ALTIUSLINKVN</p>
+        <h1>Số liệu Fanpage</h1>
+      </div>
+      <span id="dateBadge" class="date"></span>
+    </header>
+
+    <p class="hint">Extension chỉ lấy Follow. Ba ô Like được giữ trống để cột 6 dòng vẫn dán khớp bảng Excel hiện tại.</p>
+
+    <button id="collectButton" class="primary" type="button">
+      <span class="button-icon">↻</span>
+      Lấy số liệu hôm nay
+    </button>
+
+    <section id="statusBox" class="status" aria-live="polite">
+      <span id="statusDot" class="status-dot"></span>
+      <span id="statusText">Sẵn sàng</span>
+    </section>
+
+    <section class="results" aria-label="Kết quả fanpage">
+      <div class="table-head">
+        <span>Fanpage</span><span>Ô Like</span><span>Follow</span>
+      </div>
+      <div id="resultRows"></div>
+    </section>
+    <div id="errorDetails" class="error-details" hidden></div>
+
+    <section class="copy-panel">
+      <div class="copy-heading">
+        <div>
+          <span class="label">CỘT DÁN VÀO EXCEL</span>
+          <strong>6 ô · 1 cột</strong>
+        </div>
+        <button id="copyButton" class="copy-button" type="button" disabled>Copy cột</button>
+      </div>
+      <pre id="columnPreview">—
+—
+—
+—
+—
+—</pre>
+      <p class="paste-note">Chọn ô đầu tiên ở dòng “Like SBIR”, sau đó nhấn Ctrl + V. Các dòng Like sẽ được để trống.</p>
+    </section>
+
+    <details>
+      <summary>Nếu không lấy được dữ liệu</summary>
+      <p>Đăng nhập Facebook trên trình duyệt này, mở thử một trong ba fanpage, rồi chạy lại. Extension chỉ đọc số Like/Follow công khai và tự đóng ba tab tạm.</p>
+    </details>
+  </main>
+  <script src="parser.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

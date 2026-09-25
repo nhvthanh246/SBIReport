@@ -643,11 +643,95 @@
   }
 
   /* =====================================================================
+   * 6 dòng fanpage — đọc số Follow dán từ extension
+   * ===================================================================== */
+
+  /**
+   * Extension "Facebook Fanpage Stats" chép ra đúng 6 dòng theo thứ tự
+   * SBIR, SMILES, DCOM, trong đó 3 dòng Like để trống:
+   *
+   *     (trống)
+   *     431722
+   *     (trống)
+   *     149874
+   *     (trống)
+   *     393729
+   *
+   * Nhưng người dùng có thể dán thiếu dòng trống, dán 3 số, hoặc gõ tay kèm
+   * tên trang. Nhận hết các dạng đó, miễn là suy ra được 3 số theo đúng thứ tự.
+   *
+   * Trả { follows: {KEY: số}, order: [KEY...], warnings: [...] } hoặc null nếu
+   * ô dán còn trống.
+   */
+  function parseFanpage(text, cfg, warnings) {
+    var fc = cfg.fanpage;
+    if (!fc || !fc.pages || !fc.pages.length) return null;
+    var raw = P.cellToString(text);
+    if (!raw.trim()) return null;
+
+    var keys = fc.pages.map(function (p) { return p.key; });
+    var lines = raw.split(/\r?\n/).map(function (l) { return l.trim(); });
+
+    function toNum(s) {
+      /* 431.722 / 431,722 / 431 722 / 431722 — dấu phân cách hàng nghìn kiểu nào cũng nhận */
+      var t = String(s).replace(/[.,\s ]/g, '');
+      if (!/^\d+$/.test(t)) return null;
+      var n = Number(t);
+      return isFinite(n) && n >= 100 ? n : null;
+    }
+
+    var follows = {}, found = 0;
+
+    /* Dạng 1: có tên trang trên cùng dòng với số — tin cậy nhất, không phụ thuộc thứ tự */
+    lines.forEach(function (line) {
+      if (!line) return;
+      var up = P.normText(line).toUpperCase();
+      for (var i = 0; i < keys.length; i++) {
+        if (up.indexOf(keys[i]) === -1) continue;
+        var m = line.match(/([\d][\d.,\s ]*)/g);
+        if (!m) return;
+        for (var j = m.length - 1; j >= 0; j--) {
+          var n = toNum(m[j]);
+          if (n !== null && follows[keys[i]] === undefined) { follows[keys[i]] = n; found++; return; }
+        }
+        return;
+      }
+    });
+
+    /* Dạng 2: chỉ có số — gán theo thứ tự SBIR, SMILES, DCOM */
+    if (found < keys.length) {
+      var nums = [];
+      lines.forEach(function (line) {
+        if (!line) return;
+        var n = toNum(line);
+        if (n !== null) nums.push(n);
+      });
+      if (nums.length === keys.length) {
+        follows = {};
+        keys.forEach(function (k, i) { follows[k] = nums[i]; });
+        found = keys.length;
+      }
+    }
+
+    var missing = keys.filter(function (k) { return follows[k] === undefined; });
+    if (missing.length && warnings) {
+      warn(warnings, 'warn', 'Chưa đọc được số follow của ' + missing.join(', '),
+        'Không đoán bừa thứ tự khi thiếu số — những dòng đó sẽ để trống trong báo cáo. ' +
+        'Hãy bấm Copy trong extension rồi dán lại nguyên vẹn, hoặc gõ mỗi dòng một số ' +
+        'theo đúng thứ tự ' + keys.join(' → ') + '.');
+    }
+    if (!Object.keys(follows).length) return null;
+    return { follows: follows, order: keys };
+  }
+
+  /* =====================================================================
    * Dựng 3 khối dán
    * ===================================================================== */
   function buildBlocks(input, cfg, reportSerial) {
     var warnings = [];
     var session = input.session, ccvn = input.ccvn, ops = input.ops || [];
+    /* Số follow fanpage dán từ extension — không bắt buộc */
+    var fanpage = parseFanpage(input.fanpageText, cfg, warnings);
 
     /* --- Khối 1: 1. CSKH --- */
     var rows1 = [];
@@ -784,6 +868,7 @@
     }
 
     return {
+      fanpage: fanpage,
       reportSerial: reportSerial,
       reportISO: P.serialToISO(reportSerial),
       warnings: warnings,
@@ -813,6 +898,7 @@
     computeSummary: computeSummary,
     computeKpi: computeKpi,
     inspectMailSf: inspectMailSf,
+    parseFanpage: parseFanpage,
     buildBlocks: buildBlocks,
     BLOCK1_HEADERS: BLOCK1_HEADERS,
     BLOCK3_HEADERS: BLOCK3_HEADERS

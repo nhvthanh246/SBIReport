@@ -50,6 +50,27 @@ Tool hiện:
 > ⚠️ **Đổi file sau khi đã bấm Xử lý thì phải bấm Xử lý lại.** Tool sẽ làm mờ màn hình
 > và khoá nút tải để nhắc bạn. Nếu không, bạn sẽ tải ra file dựng từ dữ liệu cũ.
 
+### 2b. Dán số follow fanpage
+
+Trong phần kết quả có ô **"Số follow fanpage"**.
+
+1. Mở extension **Facebook Fanpage Stats** trên thanh công cụ Chrome
+2. Bấm **Lấy số liệu hôm nay** — extension tự mở 3 fanpage và đọc số
+3. Bấm **Copy**
+4. Dán vào ô trong tool
+
+Tool đọc ra 3 số và hiện lại để bạn đối chiếu. Dán thiếu hoặc sai định dạng thì tool
+báo ngay chứ không đoán bừa thứ tự.
+
+> **Số like thì sao?** Phía SBI xác nhận chỉ cần ước lượng theo các ngày trước. Đối
+> chiếu dữ liệu thật thì 3 số like giữ nguyên suốt cả tháng, nên tool **tự chép lại
+> của ngày gần nhất** — bạn không phải làm gì.
+>
+> Nếu số like vừa đổi so với ngày trước đó, tool sẽ cảnh báo. Nhờ luật này mà phát
+> hiện DCOM bị gõ nhầm `3111k` (thừa một số 1) từ ngày 14/9, trong khi cả tháng là `311k`.
+
+Bỏ qua bước này cũng được: 3 dòng follow để trống, phần còn lại vẫn chạy bình thường.
+
 ### 3. Tải file báo cáo tổng
 
 Bấm **Tải file báo cáo tổng**. Đây là file hoàn chỉnh, đã điền sẵn mọi thứ tool làm được.
@@ -82,7 +103,7 @@ Xem mục [Danh sách kiểm tra](#danh-sách-kiểm-tra-trước-khi-gửi).
 | **1. CSKH** | Gộp dữ liệu chat bot + dữ liệu file OP, đánh số thứ tự, điền ngày, lọc bỏ dòng "lỗi bot" |
 | **2. SF Case info** | Chép case từ Salesforce, tra email supporter, đổi tên người lập case theo quy tắc |
 | **3. Other Tasks** | Chép giờ làm từ file OP, điền ngày |
-| **Summarize_team VietNam** | 22 chỉ tiêu (xem bảng dưới) |
+| **Summarize_team VietNam** | 22 chỉ tiêu + 6 dòng fanpage (xem bảng dưới) |
 | **Summarize** | Kéo công thức sang cột ngày mới (sheet này tự rút số từ Summarize_team) |
 | **Sheet5** | Kéo công thức cột phụ xuống cho dư chỗ khi có thêm người |
 | **Daily KPI Result** | Cập nhật ô ngày |
@@ -96,6 +117,7 @@ Xem mục [Danh sách kiểm tra](#danh-sách-kiểm-tra-trước-khi-gửi).
 - Dòng 28: ⑨CCVN Case check&process
 - Dòng 33–45: toàn bộ khối **Nội dung hỗ trợ** (13 dòng, đếm theo Topic Level 1)
 - Dòng 57: ② Số lượng comment đã hỗ trợ
+- Dòng 61–66: like/follow 3 fanpage — follow lấy từ extension, like chép của ngày gần nhất
 
 ---
 
@@ -117,7 +139,6 @@ Tool không bịa số. Những mục dưới đây không có trong 4 file đ�
 | 58 | ③ Khung giờ hỗ trợ | Giờ chốt ca, tự khai |
 | 59 | ④ Số lượng OP (không tính TL, JP, senior) | Đếm tay theo chức danh |
 | 60 | ⑤ Số lượng claim/ý kiến | |
-| 61–66 | Like/follow 3 fanpage (6 dòng) | Tool của bên khác |
 
 > **Không cần điền gì ở sheet `Summarize`.** Mọi ô ở đó là công thức rút thẳng từ
 > `Summarize_team VietNam`. Điền xong sheet kia thì sheet này tự có số.

@@ -597,6 +597,89 @@
       'Sheet này chỉ là gương của "' + cfg.summary.sheet + '", không có dữ liệu riêng.');
   }
 
+  /**
+   * 6 dòng fanpage (61-66) của sheet tổng hợp.
+   *
+   * FOLLOW: số thật do extension lấy về, người dùng dán vào tool.
+   * LIKE:   phía SBI chỉ cần ước lượng theo các ngày trước. Đối chiếu dữ liệu
+   *         thật thì 3 giá trị này giữ nguyên cả tháng, nên chép lại giá trị
+   *         gần nhất bên trái đúng là việc người làm vẫn đang làm.
+   *
+   * Đọc giá trị cũ từ `masterWb` chứ không từ XML: Like là chữ ("382k") nên
+   * trong XML nó là chỉ số vào bảng chuỗi dùng chung, tự giải rất phiền.
+   */
+  function patchFanpage(files, sheetPart, readText, writeText, cfg, serial, fanpage, masterWb, report) {
+    var fc = cfg.fanpage;
+    if (!fc || !fc.pages || !fc.pages.length) return [];
+    var sheetName = (cfg.summary && cfg.summary.sheet) || fc.sheet;
+    var part = sheetPart[sheetName];
+    if (!part || !files[part]) return [];
+
+    var xml = readText(part);
+    var headerRow = (cfg.summary && cfg.summary.dayHeaderRow) || 4;
+    var col = findDayColumn(xml, headerRow, serial);
+    if (col === -1) {
+      report.push('  fanpage: không tìm thấy cột ngày ' + serial + ' — bỏ qua');
+      return [];
+    }
+
+    /* Ma trận của sheet để đọc giá trị các ngày trước */
+    var m = null, hdr = [];
+    if (masterWb && masterWb.Sheets[sheetName]) {
+      m = P.sheetToMatrix(masterWb.Sheets[sheetName]);
+      hdr = m.rows[headerRow - 1] || [];
+    }
+    function prevValue(row, fromCol) {
+      if (!m) return null;
+      var lookback = fc.carryLookback || 40;
+      var r = m.rows[row - 1] || [];
+      for (var c = fromCol - 1; c >= 0 && fromCol - c <= lookback; c--) {
+        /* chỉ lùi qua các cột thực sự là cột ngày */
+        var h = parseFloat(String(hdr[c] === undefined ? '' : hdr[c]).trim());
+        if (!isFinite(h)) continue;
+        var v = P.cellToString(r[c]).trim();
+        if (v) return { value: v, col: c, serial: Math.round(h) };
+      }
+      return null;
+    }
+
+    var edits = [], wrote = [], notes = [], oddLikes = [];
+    fc.pages.forEach(function (pg) {
+      /* --- Follow --- */
+      var n = fanpage && fanpage.follows ? fanpage.follows[pg.key] : undefined;
+      if (n !== undefined && n !== null) {
+        edits.push({ row: pg.followRow, col: col, value: n, type: 'number', formula: null });
+        wrote.push(pg.followRow);
+        notes.push(pg.label + ' follow=' + n);
+      }
+
+      /* --- Like: chép của ngày gần nhất --- */
+      if (fc.carryLike) {
+        var prev = prevValue(pg.likeRow, col);
+        if (prev) {
+          edits.push({ row: pg.likeRow, col: col, value: prev.value, type: 'auto', formula: null });
+          wrote.push(pg.likeRow);
+          notes.push(pg.label + ' like=' + prev.value + ' (chép ngày ' + prev.serial + ')');
+          /* Giá trị này lẽ ra đứng yên cả tháng. Vừa đổi = đáng ngờ. */
+          var before = prevValue(pg.likeRow, prev.col);
+          if (before && P.normText(before.value) !== P.normText(prev.value)) {
+            oddLikes.push(pg.label + ': ngày ' + before.serial + ' là "' + before.value +
+              '" nhưng ngày ' + prev.serial + ' đổi thành "' + prev.value + '"');
+          }
+        }
+      }
+    });
+
+    if (!edits.length) return [];
+    writeText(part, patchCells(xml, edits, { report: report }));
+    report.push('  ' + sheetName + ': 6 dòng fanpage, cột ' + numToCol(col) + ' — ' + notes.join(', '));
+    if (oddLikes.length) {
+      report.push('  ⚠ fanpage: số Like lẽ ra giữ nguyên cả tháng nhưng vừa đổi — ' +
+        oddLikes.join(' · ') + '. Kiểm tra xem có gõ nhầm không trước khi chép tiếp.');
+    }
+    return wrote;
+  }
+
   /** Ô ngày ở phần đầu mỗi tab — nằm ngoài vùng khối nên phải ghi riêng. */
   function patchDateHeaders(files, sheetPart, readText, writeText, cfg, serial, report) {
     var list = cfg.dateHeaderCells || [];
@@ -868,6 +951,10 @@
     var kpiInfo = {};
     patchKpi(files, sheetPart, readText, writeText, blocks, cfg, opts.masterWb, report, kpiInfo);
 
+    /* 6 dòng fanpage: Follow từ extension, Like chép của ngày gần nhất */
+    var fanpageRows = patchFanpage(files, sheetPart, readText, writeText, cfg,
+      blocks.reportSerial, blocks.fanpage, opts.masterWb, report);
+
     /* Sheet Summarize: kéo công thức gương sang cột của ngày mới */
     patchSummarizeMirror(files, sheetPart, readText, writeText, cfg, blocks.reportSerial, report);
 
@@ -926,7 +1013,10 @@
 
     report.push('  zip: giữ ' + Object.keys(ordered).length + '/' + originalCount + ' part');
     return { bytes: bytes, report: report, partCount: Object.keys(ordered).length,
-             oddRateEmails: kpiInfo.oddRateEmails || {} };
+             oddRateEmails: kpiInfo.oddRateEmails || {},
+             /* dòng fanpage tool THỰC SỰ ghi — phần đối chứng chỉ so những dòng này,
+                vì Follow chỉ có khi người dùng dán số từ extension vào */
+             fanpageRows: fanpageRows };
   }
 
   return { patch: patch, numToCol: numToCol, colToNum: colToNum, parseAddr: parseAddr };

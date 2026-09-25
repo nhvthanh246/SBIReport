@@ -228,8 +228,35 @@
         '46': 'Ý kiến KH — 6 dòng 46-51',
         '53': '① Số lượng OP hỗ trợ Outbound', '54': '② Số lượng KH Outbound',
         '55': '③ Nội dung Outbound',
-        '61': 'Fanpage like/follow — 6 dòng 61-66 (tool bên khác cung cấp)'
+        /* 61-66 fanpage: tool tự điền, xem khối `fanpage` bên dưới.
+           Follow lấy từ extension, Like chép của ngày gần nhất. */
       }
+    },
+
+    /* --- 6 dòng fanpage (61-66) ---
+     * FOLLOW (62/64/66): số thật, nhích lên mỗi ngày. Lấy bằng extension
+     *   "Facebook Fanpage Stats - AltiuslinkVN" trong thư mục `extension/`:
+     *   bấm "Lấy số liệu hôm nay" -> "Copy" -> dán vào ô trong tool.
+     *   Extension chép ra đúng 6 dòng theo thứ tự SBIR, SMILES, DCOM, trong đó
+     *   3 dòng Like để trống — khớp y hệt 6 dòng này của Excel.
+     *
+     * LIKE (61/63/65): phía SBI xác nhận chỉ cần ước lượng theo các ngày trước,
+     *   không cần chính xác tuyệt đối. Đối chiếu dữ liệu thật: 3 giá trị này
+     *   GIỮ NGUYÊN suốt cả tháng (382k / 111k / 311k), tức là người làm vẫn
+     *   đang chép lại của hôm trước. Tool làm đúng như vậy: lấy giá trị gần
+     *   nhất ở các cột ngày bên trái. Nếu giá trị đó vừa đổi so với ngày liền
+     *   trước nữa thì tool cảnh báo — chính nhờ luật này mà phát hiện được
+     *   DCOM bị gõ "3111k" (thừa số 1) từ ngày 14/9, trong khi cả tháng là "311k". */
+    fanpage: {
+      pages: [
+        { key: 'SBIR', label: 'SBIR', likeRow: 61, followRow: 62 },
+        { key: 'SMILES', label: 'SMILES', likeRow: 63, followRow: 64 },
+        { key: 'DCOM', label: 'DCOM', likeRow: 65, followRow: 66 }
+      ],
+      /* Lấy Like của ngày gần nhất bên trái. Đặt false nếu muốn tự nhập tay. */
+      carryLike: true,
+      /* Quét tối đa bao nhiêu cột sang trái để tìm giá trị Like gần nhất */
+      carryLookback: 40
     },
 
     /* --- Sheet "Summarize" ---

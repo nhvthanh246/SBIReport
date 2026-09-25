@@ -27,7 +27,9 @@
     cfg: null,
     session: null, ccvn: null, ops: [], blocks: null, reportSerial: null,
     /* chữ ký bộ file lúc bấm Xử lý; khác chữ ký hiện tại = kết quả đã cũ */
-    ranSignature: null, stale: false
+    ranSignature: null, stale: false,
+    /* số follow fanpage dán từ extension — không phải file nên không tính vào chữ ký */
+    fanpageText: ''
   };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -291,7 +293,8 @@
 
     state.blocks = Pipe.buildBlocks({
       session: state.session, ccvn: state.ccvn, ops: state.ops,
-      emailTable: state.mailSf && state.mailSf.table
+      emailTable: state.mailSf && state.mailSf.table,
+      fanpageText: state.fanpageText
     }, state.cfg, state.reportSerial);
 
     state.ranSignature = fileSignature();
@@ -351,7 +354,42 @@
         : swapped + ' dòng đang bị bỏ sót. Lỗi locale lúc nhập liệu — tích vào để tính.';
     }
 
+    renderFanpage();
     renderIssues();
+  }
+
+  /* ---- ô dán số follow fanpage ----
+     Đọc lại ngay khi gõ: rẻ hơn dựng lại cả 3 khối, và người dùng thấy phản hồi tức thì. */
+  function applyFanpage() {
+    if (!state.blocks) return;
+    var w = [];
+    state.blocks.fanpage = Pipe.parseFanpage(state.fanpageText, state.cfg, w);
+    state.fanpageWarnings = w;
+    renderFanpage();
+  }
+
+  function renderFanpage() {
+    var out = $('fanpage-out');
+    if (!out) return;
+    var fc = state.cfg.fanpage;
+    var fp = state.blocks && state.blocks.fanpage;
+    if (!fc) { $('fanpage').classList.add('hidden'); return; }
+    if (!fp) {
+      out.className = 'fp-out';
+      out.textContent = state.fanpageText.trim()
+        ? 'Chưa đọc được số nào từ ô dán — 3 dòng follow sẽ để trống.'
+        : 'Chưa dán số nào — 3 dòng follow sẽ để trống.';
+      return;
+    }
+    var parts = [], missing = [];
+    fc.pages.forEach(function (pg) {
+      var n = fp.follows[pg.key];
+      if (n === undefined) missing.push(pg.label);
+      else parts.push(pg.label + ' ' + n.toLocaleString('vi-VN'));
+    });
+    out.className = 'fp-out ' + (missing.length ? 'warn' : 'ok');
+    out.textContent = (missing.length ? 'Thiếu ' + missing.join(', ') + '. Đã đọc: ' : 'Đã đọc: ') +
+      parts.join(' · ') + '. Số like sẽ chép của ngày gần nhất trong file tổng.';
   }
 
   function issueEl(kind, title, detail) {
@@ -746,6 +784,11 @@
     $('preview-pick').addEventListener('change', renderPreview);
     $('btn-all').addEventListener('click', function () {
       W.download(W.buildAllBlocksWorkbook(state.blocks), 'Khoi-dan_' + state.blocks.reportISO + '.xlsx');
+    });
+
+    $('fanpage-in').addEventListener('input', function (e) {
+      state.fanpageText = e.target.value;
+      applyFanpage();
     });
 
     $('accept-swapped').addEventListener('change', function (e) {

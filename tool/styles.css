@@ -402,3 +402,31 @@ footer { color: var(--ink-3); font-size: 12px; text-align: center; margin-top: 3
   .cta button { width: 100%; }
   .result-head { flex-direction: column; align-items: flex-start; }
 }
+
+/* ---- ô dán số follow fanpage ---- */
+.fanpage {
+  margin-top: 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.fp-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.fp-t { font-size: 14px; font-weight: 600; color: var(--ink); }
+.fp-d { font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+#fanpage-in {
+  width: 100%;
+  box-sizing: border-box;
+  font: 13px/1.6 var(--mono);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  resize: vertical;
+}
+#fanpage-in:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.fp-out { margin-top: 10px; font-size: 13px; color: var(--ink-3); line-height: 1.6; }
+.fp-out.ok { color: var(--ok); }
+.fp-out.warn { color: var(--warn); }
+.fp-out b { font-variant-numeric: tabular-nums; }

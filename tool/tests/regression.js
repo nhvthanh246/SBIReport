@@ -120,7 +120,8 @@
       var checks = SelfTest.compareWithReference(patched.bytes, ref.wb, blocks, cfg, {
         affectedEmails: affected,
         baseWb: base.wb,
-        oddRateEmails: patched.oddRateEmails
+        oddRateEmails: patched.oddRateEmails,
+        fanpageRows: patched.fanpageRows
       });
       var badXml = xmlErrors(patched.bytes);
       checks.push({
