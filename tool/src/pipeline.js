@@ -23,8 +23,25 @@
     'Tổng số giờ đã hỗ trợ KH', 'Tổng số giờ đã Outbound', 'Tổng số giờ đã xử lý case',
     'Trả lời Comment', 'Đăng ký mới + webform + Gọi OB', 'Khác'];
 
-  function warn(list, level, message, detail) {
-    list.push({ level: level, message: message, detail: detail || null });
+  /* `spots` = danh sách ô gây ra cảnh báo, để UI chỉ đúng tệp/dòng/ô và để dựng
+     bản Excel đánh dấu. Mỗi spot: { file, sheet, row (1-based), col (0-based|null),
+     value, why }. Cắt bớt ở SPOT_CAP để một cảnh báo hàng nghìn dòng không làm
+     phình bộ nhớ; `spotTotal` giữ lại con số thật. */
+  var SPOT_CAP = 400;
+
+  function warn(list, level, message, detail, spots) {
+    var item = { level: level, message: message, detail: detail || null };
+    if (spots && spots.length) {
+      item.spotTotal = spots.length;
+      item.spots = spots.slice(0, SPOT_CAP);
+    }
+    list.push(item);
+  }
+
+  function spot(file, sheet, row, col, value, why) {
+    return { file: file, sheet: sheet, row: row,
+             col: (col === undefined || col === null || col < 0) ? null : col,
+             value: P.cellToString(value), why: why || '' };
   }
 
   /* --- Cột luôn ghi trống (xem `blankColumns` trong config) ---
@@ -123,6 +140,8 @@
       if (hit) {
         dropped.push({
           excelRow: r + 1,
+          col: hit.col,
+          value: P.cellToString(row[hit.col]),
           reason: hit.rule.column + ' ' + hit.rule.op + ' "' + hit.rule.value + '"',
           preview: P.cellToString(row[P.findColumn(headers, 'Customer')]) + ' — ' +
                    P.cellToString(row[hit.col])
@@ -238,6 +257,11 @@
       return out;
     }
 
+    /* Bỏ cột làm lệch chỉ số cột, nên giữ bảng tra ngược: cột thứ i của bảng đã
+       bỏ cột ứng với cột nào trong FILE GỐC. Cần khi báo lỗi để chỉ đúng ô. */
+    var srcCol = [];
+    for (var sc = 0; sc <= m.maxCol; sc++) { if (!removedSet[sc]) srcCol.push(sc); }
+
     /* Ma trận sạch: giữ nguyên metadata, header, dữ liệu và dòng Total */
     var cleaned = [];
     for (var r3 = 0; r3 < m.rows.length; r3++) {
@@ -246,7 +270,7 @@
     while (cleaned.length && !cleaned[cleaned.length - 1].length) cleaned.pop();
 
     var headers = cleaned[headerIdx] || [];
-    var dataRows = [], totalRow = null;
+    var dataRows = [], dataRowNumbers = [], totalRow = null;
     for (var r4 = headerIdx + 1; r4 < cleaned.length; r4++) {
       var row = cleaned[r4];
       if (!row.length) continue;
@@ -256,6 +280,7 @@
       }
       if (firstCell === P.normText(c.totalRowMarker)) { totalRow = row; continue; }
       dataRows.push(row);
+      dataRowNumbers.push(r4 + 1);
     }
 
     return {
@@ -266,6 +291,9 @@
       headerIndex: headerIdx,
       headers: headers,
       dataRows: dataRows,
+      /* số dòng trong FILE GỐC của từng dòng dữ liệu, cùng thứ tự với dataRows */
+      dataRowNumbers: dataRowNumbers,
+      srcCol: srcCol,
       totalRow: totalRow,
       removedColumns: removed.map(function (x) { return XLSX.utils.encode_col(x); }),
       stats: { total: dataRows.length, removedColumns: removed.length },
@@ -303,19 +331,30 @@
       return false;
     }
 
-    var picked = [], scanned = 0, unparsed = [], noDate = 0, swapped = [], dateOnly = 0;
+    var picked = [], scanned = 0, unparsed = [], swapped = [], dateOnly = 0;
+    var noDateRows = [], unparsedRows = [];
+    /* Đếm số phận của TỪNG dòng để trả lời được câu "dòng nào bị bỏ, vì sao".
+       Không có bảng này thì chỉ thấy kết quả cuối, không biết đã bỏ cái gì. */
+    var tally = { emptyRow: 0, otherDay: 0, scannedAll: 0 };
     for (var r = spec.dataStartRow - 1; r < m.rows.length; r++) {
       var row = m.rows[r];
-      if (P.rowIsEmpty(row, m.maxCol)) continue;
+      tally.scannedAll++;
+      if (P.rowIsEmpty(row, m.maxCol)) { tally.emptyRow++; continue; }
       if (!hasContent(row)) { dateOnly++; continue; }
       scanned++;
       var serial = P.toDateSerial(row[dateCol]);
       if (serial === null) {
         /* Dòng có nội dung nhưng không xác định được ngày sẽ bị bỏ qua hoàn toàn —
            phải báo ra, nếu không sẽ thiếu dữ liệu mà không ai biết. */
-        if (P.isBlank(row[dateCol])) noDate++;
-        else if (unparsed.indexOf(P.cellToString(row[dateCol])) === -1) {
-          unparsed.push(P.cellToString(row[dateCol]));
+        if (P.isBlank(row[dateCol])) {
+          noDateRows.push(spot(fileName, spec.sheet, r + 1, dateCol, '',
+            'Ô ngày để trống nên không biết dòng này thuộc ngày nào — dòng bị bỏ qua'));
+        } else {
+          unparsedRows.push(spot(fileName, spec.sheet, r + 1, dateCol, row[dateCol],
+            'Giá trị ngày không đọc được — dòng bị bỏ qua'));
+          if (unparsed.indexOf(P.cellToString(row[dateCol])) === -1) {
+            unparsed.push(P.cellToString(row[dateCol]));
+          }
         }
         continue;
       }
@@ -328,16 +367,19 @@
       if (P.swappedSerial(row[dateCol]) === reportSerial) {
         swapped.push({ excelRow: r + 1, cells: row, raw: P.cellToString(row[dateCol]) });
         if (acceptSwapped) picked.push({ excelRow: r + 1, cells: row, swapped: true });
+        continue;
       }
+      tally.otherDay++;
     }
     if (unparsed.length) {
       warn(warnings, 'error', 'Sheet "' + spec.sheet + '" trong ' + fileName +
-        ': có giá trị ngày không đọc được — các dòng này bị bỏ qua',
-        unparsed.slice(0, 10).join(' · '));
+        ': ' + unparsedRows.length + ' dòng có giá trị ngày không đọc được — bị bỏ qua',
+        'Các giá trị gặp phải: ' + unparsed.slice(0, 10).join(' · '), unparsedRows);
     }
-    if (noDate) {
-      warn(warnings, 'warn', 'Sheet "' + spec.sheet + '" trong ' + fileName + ': ' + noDate +
-        ' dòng có nội dung nhưng bỏ trống ô ngày — bị bỏ qua');
+    if (noDateRows.length) {
+      warn(warnings, 'warn', 'Sheet "' + spec.sheet + '" trong ' + fileName + ': ' +
+        noDateRows.length + ' dòng có nội dung nhưng bỏ trống ô ngày — bị bỏ qua',
+        null, noDateRows);
     }
     if (dateOnly > 50) {
       warn(warnings, 'warn', 'Sheet "' + spec.sheet + '" trong ' + fileName + ': bỏ qua ' +
@@ -359,9 +401,38 @@
         (acceptSwapped ? 'đã tính vào báo cáo' : 'ĐANG BỊ BỎ SÓT'),
         'Giá trị ghi trong file: ' +
         Object.keys(samples).map(function (k) { return k + ' (' + samples[k] + ' dòng)'; }).join(' · ') +
-        (acceptSwapped ? '' : ' — bật "Nhận dòng bị đảo ngày/tháng" ở bước 2 để tính vào.'));
+        (acceptSwapped ? '' : ' — bật "Nhận dòng bị đảo ngày/tháng" ở bước 2 để tính vào.'),
+        swapped.map(function (sw) {
+          return spot(fileName, spec.sheet, sw.excelRow, dateCol, sw.raw,
+            'Ngày và tháng bị đảo. Sửa ô này thành ngày báo cáo, hoặc đổi định dạng cột sang dd/mm/yyyy.');
+        }));
     }
-    return { rows: picked, scanned: scanned, headers: headers, swapped: swapped };
+    /* Bảng kê số phận từng dòng — luôn hiện, để trả lời ngay được câu
+       "tool bỏ dòng nào, vì sao" mà không cần ai đi dò file. */
+    var emailCol = spec.emailColumn === undefined ? 4 : spec.emailColumn;
+    var people = {};
+    picked.forEach(function (x) {
+      var e = P.cellToString(x.cells[emailCol]).trim();
+      if (e) people[e] = true;
+    });
+    var parts = [
+      'lấy ' + picked.length + ' dòng' +
+        (Object.keys(people).length ? ' (' + Object.keys(people).length + ' người)' : ''),
+      'ngày khác: ' + tally.otherDay
+    ];
+    if (tally.emptyRow) parts.push('dòng trống: ' + tally.emptyRow);
+    if (dateOnly) parts.push('chỉ có ô ngày, không nội dung: ' + dateOnly);
+    if (noDateRows.length) parts.push('BỎ TRỐNG ô ngày: ' + noDateRows.length);
+    if (unparsedRows.length) parts.push('ngày KHÔNG đọc được: ' + unparsedRows.length);
+    if (swapped.length) parts.push('ĐẢO ngày/tháng: ' + swapped.length +
+      (acceptSwapped ? ' (đã tính)' : ' (đang bỏ sót)'));
+    warn(warnings, 'info', 'Sheet "' + spec.sheet + '" trong ' + fileName + ': quét ' +
+      tally.scannedAll + ' dòng', parts.join(' · ') +
+      '. Cột ngày đọc ở "' + spec.dateColumn + '". Những dòng ghi BỎ TRỐNG / KHÔNG đọc được / ' +
+      'ĐẢO ngày đều có địa chỉ ô cụ thể ở cảnh báo riêng bên trên.');
+
+    return { rows: picked, scanned: scanned, headers: headers, swapped: swapped,
+             tally: tally, people: Object.keys(people) };
   }
 
   function processOpFile(wb, cfg, reportSerial, fileName) {
@@ -467,7 +538,7 @@
    *
    * Trả { total, duplicates: [{name, entries}], affected: {email đã chuẩn hoá: true} }
    */
-  function inspectMailSf(masterWb, cfg, warnings) {
+  function inspectMailSf(masterWb, cfg, warnings, fileName) {
     var spec = cfg.mailSf;
     if (!spec || !masterWb) return null;
     var ws = masterWb.Sheets[spec.sheet];
@@ -515,7 +586,16 @@
         }).join(' | ') +
         '. VLOOKUP chỉ lấy dòng ĐẦU TIÊN, nên các email sau không bao giờ nhận được case. ' +
         'Hãy xoá dòng thừa trong "' + spec.sheet + '", hoặc nếu đúng là hai người khác nhau ' +
-        'thì phải thêm cách phân biệt vì tra theo tên không đủ.');
+        'thì phải thêm cách phân biệt vì tra theo tên không đủ.',
+        duplicates.reduce(function (acc, g) {
+          g.entries.forEach(function (e, i) {
+            acc.push(spot(fileName || 'File báo cáo tổng', spec.sheet, e.row, spec.nameColumn, e.name,
+              i === 0
+                ? 'Tên này bị ghi ' + g.entries.length + ' lần. Dòng này là dòng VLOOKUP lấy (' + e.email + ').'
+                : 'Trùng với dòng ' + g.entries[0].row + ' (' + e.email + ') — dòng này không bao giờ nhận được case.'));
+          });
+          return acc;
+        }, []));
     }
     return { total: total, duplicates: duplicates, affected: affected, table: table };
   }
@@ -642,6 +722,33 @@
     return { forEmail: forEmail, team: team, p1: p1, p2: p2, p3: p3 };
   }
 
+  /**
+   * Gom mọi vị trí lỗi trong một danh sách cảnh báo lại theo TỆP.
+   * Trả [{ file, sheets: { <tên sheet>: [spot...] }, count, levels }]
+   * UI dùng để hiện "tệp nào, dòng nào"; phần xuất file dùng để đánh dấu ô.
+   */
+  function collectSpots(warningLists) {
+    var byFile = {};
+    (warningLists || []).forEach(function (list) {
+      (list || []).forEach(function (w) {
+        (w.spots || []).forEach(function (sp) {
+          if (!sp || !sp.file) return;
+          var f = byFile[sp.file] || (byFile[sp.file] = {
+            file: sp.file, sheets: {}, count: 0, levels: {}, messages: {}
+          });
+          var arr = f.sheets[sp.sheet] || (f.sheets[sp.sheet] = []);
+          arr.push({ row: sp.row, col: sp.col, value: sp.value, why: sp.why,
+                     level: w.level, message: w.message });
+          f.count++;
+          f.levels[w.level] = (f.levels[w.level] || 0) + 1;
+          f.messages[w.message] = (f.messages[w.message] || 0) + 1;
+        });
+      });
+    });
+    return Object.keys(byFile).map(function (k) { return byFile[k]; })
+      .sort(function (a, b) { return b.count - a.count; });
+  }
+
   /* =====================================================================
    * 6 dòng fanpage — đọc số Follow dán từ extension
    * ===================================================================== */
@@ -762,6 +869,11 @@
     /* --- Khối 2: 2. SF Case info --- */
     var rows2 = [];
     var missingEmails = {};
+    /* đếm số case đã đổi tên cho từng luật — panel Đổi tên hiển thị lại cho người dùng */
+    var aliasUsed = {}, aliasHits = {};
+    /* tên người lập case thấy trong export, và tên có trong bảng `mail SF`:
+       panel dùng làm gợi ý nhập, khỏi gõ sai chính tả */
+    var namesSeen = {}, namesInMailSf = [];
     if (ccvn) {
       var cols = cfg.ccvn.caseColumns.map(function (cc) {
         var idx = P.findColumn(ccvn.headers, cc.from);
@@ -775,11 +887,12 @@
         ? input.emailTable : cfg.supporterEmails;
       var emails = {};
       Object.keys(src).forEach(function (k) { emails[P.normName(k)] = src[k]; });
+      namesInMailSf = Object.keys(src);
       var aliases = {};
       Object.keys(cfg.requestedByAliases || {}).forEach(function (k) {
         aliases[P.normName(k)] = cfg.requestedByAliases[k];
       });
-      var aliasUsed = {};
+      aliasUsed = {}; aliasHits = {};
       /* Cắt ký tự thừa cuối tên (vd dấu chấm) — ảnh hưởng cả việc tra email */
       var trimRe = null;
       if (cfg.ccvn.nameTrimPattern) {
@@ -787,7 +900,11 @@
         catch (e) { warn(warnings, 'warn', 'nameTrimPattern không hợp lệ, bỏ qua'); }
       }
 
-      ccvn.dataRows.forEach(function (row) {
+      /* Cột `Created By` của bảng đã bỏ cột ứng với cột nào trong FILE GỐC */
+      var nameSrcCol = (ccvn.srcCol && nameIdx >= 0) ? ccvn.srcCol[nameIdx] : nameIdx;
+      var missSpots = [];
+
+      ccvn.dataRows.forEach(function (row, rowIdx) {
         var vals = cols.map(function (ci, k) {
           if (ci === -1) return '';
           var v = row[ci];
@@ -798,18 +915,28 @@
         });
         var rawName = nameIdx === -1 ? '' : P.cellToString(row[nameIdx]).trim();
         if (trimRe) rawName = rawName.replace(trimRe, '');
+        if (rawName) namesSeen[rawName] = (namesSeen[rawName] || 0) + 1;
         /* Tên tài khoản SF -> tên OP thật; email tra theo tên đã đổi */
         var alias = aliases[P.normName(rawName)];
         var effName = alias || rawName;
         if (alias) {
           var key = rawName + ' → ' + alias;
           aliasUsed[key] = (aliasUsed[key] || 0) + 1;
+          /* đếm thêm theo tên đã chuẩn hoá, để panel tra đúng luật trong cấu hình
+             dù export viết hoa/thường khác nhau */
+          var nk = P.normName(rawName);
+          aliasHits[nk] = (aliasHits[nk] || 0) + 1;
         }
         if (nameOutIdx >= 0) vals[nameOutIdx] = effName;
 
         var email = emails[P.normName(effName)];
         if (!email && effName) {
           missingEmails[effName] = (missingEmails[effName] || 0) + 1;
+          missSpots.push(spot(ccvn.fileName, ccvn.sheetName,
+            (ccvn.dataRowNumbers || [])[rowIdx] || null, nameSrcCol, rawName,
+            'Tên này không có trong bảng `mail SF` của File báo cáo tổng' +
+            (alias ? ' (sau khi đổi thành "' + alias + '")' : '') +
+            ' nên case không tra được email supporter.'));
           email = '';
         }
         rows2.push(vals.concat([email || '', reportSerial]));
@@ -823,9 +950,12 @@
       }
     }
     var missNames = Object.keys(missingEmails);
+    if (!missSpots) missSpots = [];
     if (missNames.length) {
       warn(warnings, 'error', missNames.length + ' tên không tra được email trong bảng `mail SF`',
-        missNames.map(function (n) { return n + ' (' + missingEmails[n] + ' dòng)'; }).join(', '));
+        missNames.map(function (n) { return n + ' (' + missingEmails[n] + ' dòng)'; }).join(', ') +
+        ' — mở tab ẩn `mail SF` trong File báo cáo tổng, thêm dòng cho từng tên rồi chạy lại.',
+        missSpots);
     }
 
     /* --- Khối 3: 3. Other Tasks & Working time --- */
@@ -869,6 +999,11 @@
 
     return {
       fanpage: fanpage,
+      /* cho panel Đổi tên người lập case */
+      aliasUsed: aliasUsed,
+      aliasHits: aliasHits,
+      namesSeen: namesSeen,
+      namesInMailSf: namesInMailSf,
       reportSerial: reportSerial,
       reportISO: P.serialToISO(reportSerial),
       warnings: warnings,
@@ -899,6 +1034,7 @@
     computeKpi: computeKpi,
     inspectMailSf: inspectMailSf,
     parseFanpage: parseFanpage,
+    collectSpots: collectSpots,
     buildBlocks: buildBlocks,
     BLOCK1_HEADERS: BLOCK1_HEADERS,
     BLOCK3_HEADERS: BLOCK3_HEADERS

@@ -430,3 +430,143 @@ footer { color: var(--ink-3); font-size: 12px; text-align: center; margin-top: 3
 .fp-out.ok { color: var(--ok); }
 .fp-out.warn { color: var(--warn); }
 .fp-out b { font-variant-numeric: tabular-nums; }
+.fp-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fp-ext { font-size: 13px; color: var(--ink-3); }
+.fp-ext.ok { color: var(--ok); }
+.fp-ext.off { color: var(--ink-3); }
+.fp-manual { margin-top: 12px; }
+.fp-manual > summary {
+  cursor: pointer; font-size: 13px; color: var(--ink-3);
+  list-style: none; user-select: none;
+}
+.fp-manual > summary::-webkit-details-marker { display: none; }
+.fp-manual > summary::before { content: "▸ "; }
+.fp-manual[open] > summary::before { content: "▾ "; }
+.fp-manual > summary:hover { color: var(--ink); }
+.fp-manual #fanpage-in { margin-top: 10px; }
+.fp-ext.warn { color: var(--warn); }
+
+/* ---- dòng "còn thiếu nhóm nào" + thẻ trạng thái nhóm file ---- */
+.needs-missing {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.needs-missing.warn {
+  border-color: var(--err-line);
+  background: var(--err-bg);
+  color: var(--err);
+  font-weight: 600;
+}
+.needs-missing.ok {
+  border-color: var(--ok-line);
+  background: var(--ok-bg);
+  color: var(--ok);
+  font-weight: 600;
+}
+.need.static { cursor: default; }
+
+/* Thẻ nhóm file trong vùng nạp chính: CHƯA CÓ = đỏ, ĐÃ CÓ = xanh.
+   Chỉ áp trong #needs — hai panel Kiểm chứng / Đối chứng nhận file tuỳ chọn,
+   để đỏ ở đó sẽ khiến người dùng tưởng đang thiếu cái gì bắt buộc. */
+#needs .need.off {
+  border-color: var(--err-line);
+  background: var(--err-bg);
+}
+#needs .need.off .tick {
+  border-color: var(--err);
+  background: var(--err);
+  color: var(--err-bg);
+}
+#needs .need.off .nd-d { color: var(--err); font-weight: 600; }
+
+/* Ngoài vùng chính: giữ trung tính, chỉ gạch nét đứt cho biết còn trống */
+.need.off .tick { border-style: dashed; }
+#needs .need.off .tick { border-style: solid; }
+
+/* ---- vị trí lỗi: tệp / sheet / ô ---- */
+.spots { margin-top: 10px; }
+.sp-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.sp-file { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.sp-sheet { font-size: 12px; color: var(--ink-3); }
+.sp-sheet::before { content: "› "; }
+.sp-cells { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.sp-cell, .sp-more {
+  font: 11.5px/1 var(--mono);
+  padding: 4px 7px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: default;
+}
+.sp-more { border-style: dashed; color: var(--ink-3); }
+
+/* ---- tải bản Excel đã đánh dấu ---- */
+.marked {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.mk-t { font-size: 13px; font-weight: 600; color: var(--ink); }
+.mk-d { font-size: 12.5px; color: var(--ink-3); line-height: 1.55; margin-top: 3px; }
+.mk-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
+}
+.mk-name { flex: 1; min-width: 0; font-size: 12.5px; color: var(--ink); word-break: break-all; }
+.mk-count {
+  margin-left: 8px; padding: 2px 7px; border-radius: 10px;
+  font-size: 11px; background: var(--warn-bg); color: var(--warn);
+  border: 1px solid var(--warn-line); white-space: nowrap;
+}
+.mk-miss { font-size: 12px; color: var(--ink-3); }
+
+/* ---- panel Đổi tên người lập case ---- */
+.al-list { display: flex; flex-direction: column; gap: 8px; }
+.al-empty {
+  padding: 14px; border: 1px dashed var(--line-2); border-radius: var(--r-sm);
+  font-size: 13px; color: var(--ink-3); text-align: center;
+}
+.al-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 11px 13px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.al-row.bad { border-color: var(--err-line); background: var(--err-bg); }
+.al-nm { font-size: 13px; font-weight: 600; word-break: break-word; }
+.al-ar { color: var(--ink-3); flex: none; }
+.al-hit {
+  font-size: 11.5px; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+  background: var(--surface-3); color: var(--ink-2); border: 1px solid var(--line);
+}
+.al-hit.on { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-line); }
+.al-warn { font-size: 12px; color: var(--err); flex: 1 1 100%; }
+.al-del {
+  margin-left: auto; flex: none;
+  border: 1px solid var(--line-2); background: var(--surface);
+  color: var(--ink-2); font-size: 12px; padding: 5px 10px;
+}
+.al-del:hover { border-color: var(--err-line); background: var(--err-bg); color: var(--err); }
+
+.al-add {
+  margin-top: 16px; padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface);
+}
+.al-add-t { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.al-add-row { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.al-f { display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px; min-width: 0; }
+.al-f input { width: 100%; box-sizing: border-box; font-family: var(--mono); font-size: 12.5px; }
+.al-arrow { color: var(--ink-3); padding-bottom: 8px; flex: none; }
+.al-msg { margin-top: 9px; font-size: 12.5px; min-height: 1em; }
+.al-msg.err { color: var(--err); }
+.al-msg.ok { color: var(--ok); }
+.al-msg.warn { color: var(--warn); }

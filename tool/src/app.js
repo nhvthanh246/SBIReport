@@ -3,14 +3,15 @@
   'use strict';
 
   var P = window.Parse, Pipe = window.Pipeline, W = window.Writer,
-      ST = window.SelfTest, C = window.AppConfig, XP = window.XlsxPatch;
+      ST = window.SelfTest, C = window.AppConfig, XP = window.XlsxPatch,
+      MK = window.Markup;
   var CFG_KEY = 'ccvn-report-tool.config.v1';
 
   /* Bốn loại file tool cần, theo thứ tự hiển thị. `multi` = nhận nhiều file. */
   var SLOTS = [
-    { key: 'master', title: 'File báo cáo tổng', desc: 'Bản của ngày hôm trước' },
-    { key: 'session', title: 'Session Report', desc: 'Chat bot — tải từ Live Support' },
-    { key: 'ccvn', title: 'Daily Report CCVN', desc: 'Export case từ Salesforce' },
+    { key: 'master', title: 'File báo cáo tổng', desc: 'File báo cáo của ngày hôm qua' },
+    { key: 'session', title: 'Session Report', desc: 'Data Chatbot, lấy từ Live Support' },
+    { key: 'ccvn', title: 'Daily Report CCVN', desc: 'Data Export case từ Salesforce' },
     { key: 'ops', title: 'Báo cáo ngày nhân viên', desc: 'SBI DAILY REPORT', multi: true }
   ];
   var TEST_SLOTS = [
@@ -153,26 +154,37 @@
   }
 
   /** Thẻ cho từng loại file cần nạp — là <label> bọc input ẩn, bấm đâu cũng mở hộp chọn. */
-  function needEl(slot, host) {
+  /**
+   * `picker = false` -> chỉ là thẻ hiện trạng thái, không bấm chọn file được.
+   * Vùng nạp chính dùng chế độ này: người dùng kéo cả đống file vào một chỗ, tool
+   * tự phân loại, các thẻ chỉ để soi nhóm nào đã có và nhóm nào còn thiếu.
+   * Hai panel Kiểm chứng / Đối chứng vẫn là ô chọn, vì file ở đó không tự nhận
+   * biết được (bản chuẩn trông y hệt file nền).
+   */
+  function needEl(slot, host, picker) {
     var f = state.files[slot.key];
     var on = slot.multi ? (f && f.length) : !!f;
-    var d = el('label', 'need' + (on ? ' on' : ''));
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xlsx,.xlsm,.xls';
-    input.setAttribute('data-slot-input', slot.key);
-    if (slot.multi) input.multiple = true;
-    input.addEventListener('change', function () {
-      acceptFiles(input.files, slot.key);
-      input.value = '';
-    });
-    d.appendChild(input);
-    d.appendChild(el('span', 'tick', '✓'));
+    var d = el(picker ? 'label' : 'div',
+      'need' + (on ? ' on' : ' off') + (picker ? '' : ' static'));
+    if (picker) {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.xlsx,.xlsm,.xls';
+      input.setAttribute('data-slot-input', slot.key);
+      if (slot.multi) input.multiple = true;
+      input.addEventListener('change', function () {
+        acceptFiles(input.files, slot.key);
+        input.value = '';
+      });
+      d.appendChild(input);
+    }
+    d.appendChild(el('span', 'tick', on ? '✓' : '✕'));
     var body = el('span', 'nd-body');
     body.appendChild(el('span', 'nd-t', slot.title));
     var names = slot.multi
       ? (on ? f.map(function (x) { return x.name; }).join('\n') : slot.desc)
       : (on ? f.name : slot.desc);
+    if (!on && !picker) names = slot.desc;
     body.appendChild(el('span', 'nd-d', names));
     d.appendChild(body);
     if (on) {
@@ -208,24 +220,45 @@
 
     var host = $('needs');
     host.innerHTML = '';
-    SLOTS.forEach(function (s) { needEl(s, host); });
+    SLOTS.forEach(function (s) { needEl(s, host, false); });
     var host2 = $('needs-test');
     host2.innerHTML = '';
-    TEST_SLOTS.forEach(function (s) { needEl(s, host2); });
+    TEST_SLOTS.forEach(function (s) { needEl(s, host2, true); });
     var host3 = $('needs-compare');
     host3.innerHTML = '';
-    COMPARE_SLOTS.forEach(function (s) { needEl(s, host3); });
+    COMPARE_SLOTS.forEach(function (s) { needEl(s, host3, true); });
     $('btn-run').disabled = !state.files.session;
 
-    /* có file rồi thì thu gọn vùng kéo thả */
-    var any = SLOTS.some(function (s) {
+    function has(s) {
       var f = state.files[s.key];
-      return s.multi ? (f && f.length) : !!f;
-    });
+      return s.multi ? !!(f && f.length) : !!f;
+    }
+    var missing = SLOTS.filter(function (s) { return !has(s); });
+
+    /* Nhóm còn thiếu phải đọc được ngay, không phải tự dò từng thẻ.
+       Bọc guard: markup có thể được sửa tay, thiếu phần tử thì bỏ qua chứ không
+       được ném lỗi — ném ở đây là cả renderNeeds dừng giữa đường. */
+    var anyFile = SLOTS.some(has);
+    var mi = $('needs-missing');
+    if (mi) {
+      mi.className = 'needs-missing' + (missing.length ? (anyFile ? ' warn' : '') : ' ok');
+      if (!anyFile) {
+        mi.textContent = 'LƯU Ý: Tool tự động nhận biết các file';
+      } else if (missing.length) {
+        mi.textContent = 'Còn thiếu ' + missing.length + '/' + SLOTS.length + ' nhóm: ' +
+          missing.map(function (x) { return x.title; }).join(' · ');
+      } else {
+        mi.textContent = 'Đã đủ ' + SLOTS.length + ' nhóm file.';
+      }
+    }
+
+    /* có file rồi thì thu gọn vùng kéo thả */
     var dz = $('dz');
-    dz.classList.toggle('compact', any);
-    dz.querySelector('.dz-main').textContent = any
-      ? '+ Kéo thêm file vào đây' : 'Kéo cả 4 file vào đây';
+    dz.classList.toggle('compact', anyFile);
+    var dzMain = dz.querySelector('.dz-main');
+    if (dzMain) {
+      dzMain.textContent = anyFile ? '+ Kéo thêm file vào đây' : 'Kéo tất cả file vào đây';
+    }
   }
 
   function setupDropzone() {
@@ -288,7 +321,8 @@
     state.extraWarnings = [];
     state.mailSf = null;
     if (state.files.master) {
-      state.mailSf = Pipe.inspectMailSf(state.files.master.wb, state.cfg, state.extraWarnings);
+      state.mailSf = Pipe.inspectMailSf(state.files.master.wb, state.cfg, state.extraWarnings,
+        state.files.master.name);
     }
 
     state.blocks = Pipe.buildBlocks({
@@ -355,16 +389,117 @@
     }
 
     renderFanpage();
+    renderAliases();
     renderIssues();
+  }
+
+  /* ================= cầu nối với extension fanpage =================
+   *
+   * Tool KHÔNG tự đọc được Facebook: CORS chặn phản hồi cross-origin, Facebook
+   * lại render bằng JS và cần phiên đăng nhập, còn `tabs`/`debugger` là quyền
+   * chỉ extension mới có. Nên extension vẫn đi lấy số; ở đây chỉ nhận về.
+   *
+   * Giao thức: postMessage hai chiều với content script `bridge.js`. Không có
+   * extension thì im lặng bỏ qua và dùng ô dán tay.
+   */
+  var bridge = { available: false, seq: 0, waiting: {} };
+
+  function bridgePost(action, timeoutMs) {
+    var id = ++bridge.seq;
+    return new Promise(function (resolve, reject) {
+      var timer = setTimeout(function () {
+        delete bridge.waiting[id];
+        reject(new Error('Extension không trả lời.'));
+      }, timeoutMs);
+      bridge.waiting[id] = function (msg) {
+        clearTimeout(timer);
+        delete bridge.waiting[id];
+        if (msg.ok) resolve(msg.state);
+        else reject(new Error(msg.error || 'Extension báo lỗi.'));
+      };
+      window.postMessage({ __fbstats: true, kind: 'request', id: id, action: action }, '*');
+    });
+  }
+
+  window.addEventListener('message', function (ev) {
+    if (ev.source !== window) return;
+    var d = ev.data;
+    if (!d || d.__fbstats !== true) return;
+    if (d.kind === 'hello') { bridge.available = true; renderBridge(); return; }
+    if (d.kind === 'progress') { showFanpageStatus(d.state && d.state.message, 'run'); return; }
+    if (d.kind === 'response' && bridge.waiting[d.id]) bridge.waiting[d.id](d);
+  });
+
+  /** Nhận số từ state của extension -> điền vào ô dán để đi chung một đường xử lý. */
+  function adoptFanpageState(state) {
+    var ok = (state && state.pages || []).filter(function (p) { return p.ok && p.followers; });
+    if (!ok.length) {
+      showFanpageStatus((state && state.message) || 'Extension chưa lấy được số nào.', 'warn');
+      return false;
+    }
+    state.pages.forEach(function (p) {
+      if (!p.ok && p.error) console.warn('fanpage ' + p.key + ': ' + p.error);
+    });
+    /* Ghi kèm tên trang: bộ đọc khớp theo tên nên không phụ thuộc thứ tự, và
+       người dùng nhìn ô dán là biết số nào của trang nào. */
+    state.fanpageLines = ok.map(function (p) { return p.key + ' ' + p.followers.count; });
+    $('fanpage-in').value = state.fanpageLines.join('\n');
+    setFanpageText(state.fanpageLines.join('\n'));
+    var rough = ok.filter(function (p) { return !p.followers.exact; });
+    if (rough.length) {
+      showFanpageStatus('Facebook chỉ cho số làm tròn ở ' +
+        rough.map(function (p) { return p.key; }).join(', ') + ' — kiểm tra lại trước khi gửi.', 'warn');
+    }
+    return true;
+  }
+
+  function showFanpageStatus(text, kind) {
+    var el2 = $('fp-ext');
+    if (!el2 || !text) return;
+    el2.className = 'fp-ext' + (kind === 'warn' ? ' warn' : kind === 'run' ? '' : ' ok');
+    el2.textContent = text;
+  }
+
+  function renderBridge() {
+    var btn = $('fp-fetch'), note = $('fp-ext');
+    if (!btn || !note) return;
+    btn.disabled = !bridge.available;
+    if (bridge.available) {
+      note.className = 'fp-ext ok';
+      note.textContent = 'Đã thấy extension';
+    } else {
+      note.className = 'fp-ext off';
+      note.textContent = 'Không thấy extension — dùng ô “Hoặc dán tay” bên dưới';
+    }
+  }
+
+  function setFanpageText(text) {
+    state.fanpageText = text;
+    applyFanpage();
+  }
+
+  function initBridge() {
+    renderBridge();
+    /* bridge.js có thể đã chạy trước khi trang gắn listener -> hỏi một lần */
+    bridgePost('state', 1500).then(function (st) {
+      bridge.available = true;
+      renderBridge();
+      if (st && st.pages && st.pages.some(function (p) { return p.ok && p.followers; })) {
+        adoptFanpageState(st);
+      }
+    }).catch(function () { renderBridge(); });
   }
 
   /* ---- ô dán số follow fanpage ----
      Đọc lại ngay khi gõ: rẻ hơn dựng lại cả 3 khối, và người dùng thấy phản hồi tức thì. */
   function applyFanpage() {
-    if (!state.blocks) return;
+    /* Đọc được ngay cả khi chưa nạp file: người dùng hay lấy số fanpage trước.
+       Khi bấm Xử lý, `rebuild()` truyền lại `state.fanpageText` nên vẫn đi chung
+       một đường, không có hai nguồn sự thật. */
     var w = [];
-    state.blocks.fanpage = Pipe.parseFanpage(state.fanpageText, state.cfg, w);
+    state.fanpageParsed = Pipe.parseFanpage(state.fanpageText, state.cfg, w);
     state.fanpageWarnings = w;
+    if (state.blocks) state.blocks.fanpage = state.fanpageParsed;
     renderFanpage();
   }
 
@@ -372,7 +507,7 @@
     var out = $('fanpage-out');
     if (!out) return;
     var fc = state.cfg.fanpage;
-    var fp = state.blocks && state.blocks.fanpage;
+    var fp = state.fanpageParsed;
     if (!fc) { $('fanpage').classList.add('hidden'); return; }
     if (!fp) {
       out.className = 'fp-out';
@@ -392,14 +527,265 @@
       parts.join(' · ') + '. Số like sẽ chép của ngày gần nhất trong file tổng.';
   }
 
-  function issueEl(kind, title, detail) {
+  function issueEl(kind, title, detail, w) {
     var d = el('div', 'issue ' + kind);
     d.appendChild(el('span', 'ic', '●'));
     var b = el('span', 'ib');
     b.appendChild(el('span', 'it', title));
     if (detail) b.appendChild(el('span', 'id', detail));
+    /* Vị trí lỗi: tệp nào, sheet nào, ô nào — để khỏi phải tự dò */
+    if (w) {
+      var sb = spotBlock(w);
+      if (sb) b.appendChild(sb);
+    }
     d.appendChild(b);
     return d;
+  }
+
+  /* ================= panel Đổi tên người lập case =================
+   * Luật này là quy tắc nghiệp vụ, người làm phải tự sửa được. Trước đây chỉ sửa
+   * được bằng cách gõ JSON — đúng nhưng ai cũng ngại. Panel này làm thay việc đó;
+   * ô JSON ở panel Cấu hình vẫn giữ cho trường hợp cần sửa sâu.
+   */
+
+  function aliasTable() {
+    if (!state.cfg.requestedByAliases) state.cfg.requestedByAliases = {};
+    return state.cfg.requestedByAliases;
+  }
+
+  /** Tên có trong bảng `mail SF` của file nền — tên đích phải nằm trong đây. */
+  function mailSfNames() {
+    var t = (state.mailSf && state.mailSf.table) || state.cfg.supporterEmails || {};
+    return Object.keys(t);
+  }
+
+  function knownName(name) {
+    var want = P.normName(name);
+    return mailSfNames().some(function (n) { return P.normName(n) === want; });
+  }
+
+  function aliasMsg(text, kind) {
+    var e = $('al-msg');
+    e.className = 'al-msg' + (kind ? ' ' + kind : '');
+    e.textContent = text || '';
+  }
+
+  function renderAliases() {
+    var host = $('al-list');
+    if (!host) return;
+    var tbl = aliasTable();
+    var keys = Object.keys(tbl);
+    var hits = (state.blocks && state.blocks.aliasHits) || null;
+    host.innerHTML = '';
+
+    if (!keys.length) {
+      host.appendChild(el('div', 'al-empty', 'Chưa có luật nào — mọi tên giữ nguyên như Salesforce xuất ra.'));
+    }
+
+    keys.forEach(function (from) {
+      var to = tbl[from];
+      var n = hits ? (hits[P.normName(from)] || 0) : null;
+      var missing = !knownName(to);
+      var row = el('div', 'al-row' + (missing ? ' bad' : ''));
+      row.appendChild(el('span', 'al-nm', from));
+      row.appendChild(el('span', 'al-ar', '→'));
+      row.appendChild(el('span', 'al-nm', to));
+
+      if (n !== null) {
+        var chip = el('span', 'al-hit' + (n ? ' on' : ''),
+          n ? 'đã đổi ' + n + ' case hôm nay' : 'không có case nào hôm nay');
+        row.appendChild(chip);
+      }
+
+      var del = el('button', 'al-del', 'Xoá luật');
+      del.title = 'Dùng khi nhân viên đã có tài khoản Salesforce riêng';
+      del.addEventListener('click', function () {
+        delete aliasTable()[from];
+        commitAliases('Đã xoá luật "' + from + '". Từ lần chạy sau tool giữ nguyên tên gốc.');
+      });
+      row.appendChild(del);
+
+      if (missing) {
+        row.appendChild(el('span', 'al-warn',
+          '⚠ "' + to + '" không có trong bảng `mail SF` của file nền — case đổi sang tên này ' +
+          'sẽ không tra được email. Thêm tên đó vào `mail SF` hoặc sửa lại luật.'));
+      }
+      host.appendChild(row);
+    });
+
+    /* gợi ý nhập: tên thấy trong export, và tên có trong mail SF */
+    fillList('al-from-list', state.blocks && state.blocks.namesSeen
+      ? Object.keys(state.blocks.namesSeen).sort() : []);
+    fillList('al-to-list', mailSfNames().slice().sort());
+  }
+
+  function fillList(id, items) {
+    var dl = $(id);
+    if (!dl) return;
+    dl.innerHTML = '';
+    items.forEach(function (v) {
+      var o = document.createElement('option');
+      o.value = v;
+      dl.appendChild(o);
+    });
+  }
+
+  /** Lưu cấu hình, đồng bộ ô JSON, dựng lại nếu đã có kết quả trên màn hình. */
+  function commitAliases(text, kind) {
+    kind = kind || 'ok';
+    saveConfig(state.cfg);
+    paintConfigEditor();
+    if (state.blocks) {
+      busy(true, 'Đang áp luật mới…');
+      /* Dựng lại trong setTimeout để spinner kịp vẽ. Thông báo phải đặt TRONG đây,
+         nếu không lần gọi sau sẽ ghi đè mất màu cảnh báo. */
+      setTimeout(function () {
+        rebuild();          /* rebuild() gọi lại renderAliases qua renderResult */
+        renderAliases();
+        busy(false);
+        aliasMsg(text + ' Đã tính lại báo cáo.', kind);
+      }, 20);
+    } else {
+      renderAliases();
+      aliasMsg(text, kind);
+    }
+  }
+
+  function addAlias() {
+    var from = $('al-from').value.trim();
+    var to = $('al-to').value.trim();
+    if (!from || !to) { aliasMsg('Điền cả hai tên.', 'err'); return; }
+    if (P.normName(from) === P.normName(to)) {
+      aliasMsg('Hai tên giống nhau — không cần luật nào.', 'err'); return;
+    }
+    var tbl = aliasTable();
+    var dup = Object.keys(tbl).filter(function (k) { return P.normName(k) === P.normName(from); })[0];
+    if (dup) {
+      aliasMsg('Đã có luật cho "' + dup + '" (→ ' + tbl[dup] + '). Xoá luật cũ trước nếu muốn đổi.', 'err');
+      return;
+    }
+    tbl[from] = to;
+    $('al-from').value = '';
+    $('al-to').value = '';
+    var note = 'Đã thêm luật "' + from + '" → "' + to + '".';
+    var ok = knownName(to);
+    if (!ok) note += ' Lưu ý: tên đích chưa có trong `mail SF` — xem cảnh báo đỏ ở luật vừa thêm.';
+    commitAliases(note, ok ? 'ok' : 'warn');
+  }
+
+  /* ================= hiện vị trí lỗi & tải file đã đánh dấu ================= */
+
+  var SPOT_SHOW = 12;
+
+  /** Gom mọi cảnh báo đang có trên màn hình thành một danh sách. */
+  function allWarnings() {
+    var all = (state.extraWarnings || []).slice();
+    [state.session, state.ccvn].concat(state.ops).forEach(function (r) {
+      if (r && r.warnings) all = all.concat(r.warnings);
+    });
+    if (state.blocks) all = all.concat(state.blocks.warnings);
+    if (state.fanpageWarnings) all = all.concat(state.fanpageWarnings);
+    return all;
+  }
+
+  function cellAddr(sp) {
+    if (!sp.row) return '';
+    return (sp.col === null || sp.col === undefined) ? ('dòng ' + sp.row)
+      : (MK.numToCol(sp.col) + sp.row);
+  }
+
+  /** Khối "lỗi ở đâu": tệp → sheet → danh sách ô, kèm nút tải bản đánh dấu. */
+  function spotBlock(w) {
+    if (!w.spots || !w.spots.length) return null;
+    var byFile = {};
+    w.spots.forEach(function (sp) {
+      var k = sp.file + '\u0000' + sp.sheet;
+      (byFile[k] = byFile[k] || { file: sp.file, sheet: sp.sheet, list: [] }).list.push(sp);
+    });
+
+    var wrap = el('div', 'spots');
+    Object.keys(byFile).forEach(function (k) {
+      var g = byFile[k];
+      var head = el('div', 'sp-head');
+      head.appendChild(el('span', 'sp-file', g.file));
+      head.appendChild(el('span', 'sp-sheet', g.sheet));
+      wrap.appendChild(head);
+
+      var cells = el('div', 'sp-cells');
+      g.list.slice(0, SPOT_SHOW).forEach(function (sp) {
+        var c = el('span', 'sp-cell', cellAddr(sp));
+        if (sp.value) c.title = sp.value + (sp.why ? ' — ' + sp.why : '');
+        cells.appendChild(c);
+      });
+      var rest = (w.spotTotal || w.spots.length) - Math.min(g.list.length, SPOT_SHOW);
+      if (g.list.length > SPOT_SHOW || (w.spotTotal || 0) > w.spots.length) {
+        cells.appendChild(el('span', 'sp-more', '+' + Math.max(rest, g.list.length - SPOT_SHOW) + ' ô nữa'));
+      }
+      wrap.appendChild(cells);
+    });
+    return wrap;
+  }
+
+  /**
+   * Một nút cho mỗi tệp có lỗi: tải bản copy đã tô vàng ô lỗi và kèm sheet liệt kê.
+   * Người làm sửa thẳng trong đó rồi nạp lại — khỏi tự dò theo số dòng.
+   */
+  function renderMarkedDownloads(host) {
+    var entries = Pipe.collectSpots([allWarnings()]);
+    if (!entries.length) return;
+
+    var box = el('div', 'marked');
+    box.appendChild(el('div', 'mk-t', 'Tải bản đã đánh dấu để sửa'));
+    box.appendChild(el('div', 'mk-d',
+      'Bản copy của chính file bạn nạp vào, ô lỗi được tô vàng và có thêm một sheet ' +
+      'liệt kê từng ô kèm lý do. Sửa xong thì nạp lại file đó vào tool.'));
+
+    entries.forEach(function (entry) {
+      var src = findLoadedFile(entry.file);
+      var row = el('div', 'mk-row');
+      var label = el('span', 'mk-name', entry.file);
+      label.appendChild(el('span', 'mk-count', entry.count + ' ô'));
+      row.appendChild(label);
+      if (!src) {
+        row.appendChild(el('span', 'mk-miss', 'không còn trong bộ file đang nạp'));
+      } else {
+        var btn = el('button', 'sm', 'Tải bản đánh dấu');
+        btn.addEventListener('click', function () {
+          btn.disabled = true;
+          var old = btn.textContent;
+          btn.textContent = 'Đang dựng…';
+          setTimeout(function () {
+            try {
+              var res = MK.build(src.bytes, entry, {});
+              W.download(res.bytes, markedName(entry.file));
+              btn.textContent = 'Đã tải ✓';
+            } catch (e) {
+              btn.textContent = old;
+              showTopIssue('Không dựng được bản đánh dấu', e.message);
+            }
+            setTimeout(function () { btn.textContent = old; btn.disabled = false; }, 1800);
+          }, 20);
+        });
+        row.appendChild(btn);
+      }
+      box.appendChild(row);
+    });
+    host.appendChild(box);
+  }
+
+  function markedName(name) {
+    return name.replace(/\.(xlsx|xlsm|xls)$/i, '') + '_DA-DANH-DAU.xlsx';
+  }
+
+  /** Tìm lại nội dung gốc của một tệp theo tên, trong bộ file đang nạp. */
+  function findLoadedFile(name) {
+    var hit = null;
+    SLOTS.forEach(function (s) {
+      var f = state.files[s.key];
+      if (!f) return;
+      (s.multi ? f : [f]).forEach(function (x) { if (x && x.name === name) hit = x; });
+    });
+    return hit;
   }
 
   function renderIssues() {
@@ -419,18 +805,19 @@
       box.appendChild(issueEl('ok', 'Không có vấn đề cần xử lý',
         'Mọi cột khớp cấu hình, mọi tên supporter tra được email.'));
     }
-    errors.forEach(function (w) { box.appendChild(issueEl('error', w.message, w.detail)); });
+    errors.forEach(function (w) { box.appendChild(issueEl('error', w.message, w.detail, w)); });
 
     /* cảnh báo nhẹ và ghi chú thì gấp lại, khỏi che mất lỗi thật */
     function fold(label, list, kind) {
       if (!list.length) return;
       var d = el('details', 'fold');
       d.appendChild(el('summary', null, label + ' (' + list.length + ')'));
-      list.forEach(function (w) { d.appendChild(issueEl(kind, w.message, w.detail)); });
+      list.forEach(function (w) { d.appendChild(issueEl(kind, w.message, w.detail, w)); });
       box.appendChild(d);
     }
     fold('Cảnh báo', warns, 'warn');
     fold('Ghi chú', infos, 'ok');
+    renderMarkedDownloads(box);
 
     if (state.session.droppedRows.length) {
       var d = el('details', 'fold');
@@ -786,10 +1173,29 @@
       W.download(W.buildAllBlocksWorkbook(state.blocks), 'Khoi-dan_' + state.blocks.reportISO + '.xlsx');
     });
 
+    $('al-add').addEventListener('click', addAlias);
+    $('al-to').addEventListener('keydown', function (e) { if (e.key === 'Enter') addAlias(); });
+    renderAliases();
+
     $('fanpage-in').addEventListener('input', function (e) {
-      state.fanpageText = e.target.value;
-      applyFanpage();
+      setFanpageText(e.target.value);
     });
+
+    $('fp-fetch').addEventListener('click', function () {
+      var btn = $('fp-fetch');
+      btn.disabled = true;
+      showFanpageStatus('Đang mở 3 fanpage…', 'run');
+      /* 3 tab × tải trang + chờ JS render: có thể tới hơn một phút */
+      bridgePost('collect', 180000).then(function (st) {
+        adoptFanpageState(st);
+      }).catch(function (err) {
+        showFanpageStatus(err.message, 'warn');
+      }).then(function () {
+        btn.disabled = !bridge.available;
+      });
+    });
+
+    initBridge();
 
     $('accept-swapped').addEventListener('change', function (e) {
       state.cfg.op.acceptSwappedDates = e.target.checked;

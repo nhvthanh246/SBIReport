@@ -105,7 +105,7 @@
         return Pipeline.processOpFile(f.wb, cfg, serial, f.name);
       });
       var warnings = [];
-      var mail = Pipeline.inspectMailSf(base.wb, cfg, warnings);
+      var mail = Pipeline.inspectMailSf(base.wb, cfg, warnings, base.name);
       var blocks = Pipeline.buildBlocks({
         session: session, ccvn: ccvn, ops: ops,
         emailTable: mail && mail.table

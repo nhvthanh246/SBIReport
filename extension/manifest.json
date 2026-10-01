@@ -1,10 +1,18 @@
 {
   "manifest_version": 3,
   "name": "Facebook Fanpage Stats - AltiuslinkVN",
-  "version": "1.4.0",
-  "description": "Lấy Follow của SBIR, SMILES, DCOM và sao chép theo đúng sáu dòng của Excel.",
-  "permissions": ["storage", "tabs", "scripting", "debugger"],
-  "host_permissions": ["https://www.facebook.com/*", "https://m.facebook.com/*"],
+  "version": "1.6.0",
+  "description": "Lấy Follow của SBIR, SMILES, DCOM và đưa thẳng sang web tool làm báo cáo (hoặc copy theo sáu dòng Excel).",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "debugger"
+  ],
+  "host_permissions": [
+    "https://www.facebook.com/*",
+    "https://m.facebook.com/*"
+  ],
   "action": {
     "default_title": "Lấy số liệu fanpage",
     "default_popup": "popup.html"
@@ -14,8 +22,26 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.facebook.com/*", "https://m.facebook.com/*"],
-      "js": ["parser.js", "content.js"],
+      "matches": [
+        "https://www.facebook.com/*",
+        "https://m.facebook.com/*"
+      ],
+      "js": [
+        "parser.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.vercel.app/*",
+        "file:///*/tool/index.html",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
       "run_at": "document_idle"
     }
   ]

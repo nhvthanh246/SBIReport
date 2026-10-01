@@ -5,3 +5,10 @@ GSU MANG KEO KOOOO ???
 
 
 PHẢI SO VỚI FABLE CHỨ =)))
+
+
++ Làm them 1 con bot video người ao => Nó tự đọc câu hỏi và giao tiếp với ung vien, goi may ung dung tao video => thoi thi quay video luon cho nhanh vi video no cung nhu nhau het
++ Cần hỏi lại có những kỹ năng gì, làm giao diện thân thiện với người dung hơn
++ Cần có panel cho người HR đăng bài phỏng vấn, nhập câu hỏi
++ Thêm phần setting cho người HR có khả năng them, xóa, chỉnh sửa loại câu hỏi
++ Hỏi lại HR xem cái layout này đã dễ dungf chưa ???

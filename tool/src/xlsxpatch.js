@@ -506,6 +506,19 @@
       written + ' người' + (kc.monthly.teamRow ? ' + dòng tổng' : '') +
       (skipped.length ? ', bỏ qua ' + skipped.length + ' dòng không có trong "' +
         kc.daily.sheet + '" (' + skipped.join(', ') + ')' : ''));
+    /* Hướng NGUY HIỂM khi có nhân viên mới: đã thêm vào "Daily KPI Result" nhưng
+       quên thêm dòng ở sheet KPI tháng -> tool không có ô nào để ghi, KPI người đó
+       lặng lẽ không bao giờ xuất hiện. Phải báo. */
+    var noMonthlyRow = Object.keys(allRows).filter(function (e) {
+      return !rowsOf[e] && !oddEmails[e];
+    });
+    if (noMonthlyRow.length) {
+      report.push('  ⚠ ' + mName + ': ' + noMonthlyRow.length + ' người có trong "' +
+        kc.daily.sheet + '" nhưng CHƯA có dòng ở sheet KPI tháng — KPI của họ không được ' +
+        'ghi vào đâu cả. Thêm dòng cho họ trong "' + mName + '" (cột ' +
+        numToCol(kc.monthly.emailColumn) + ' là email) rồi chạy lại: ' + noMonthlyRow.join(', '));
+    }
+
     if (oddSkipped.length) {
       report.push('  ⚠ ' + mName + ': để TRỐNG ' + oddSkipped.length + ' người dùng định mức ' +
         'KPI riêng trong "' + kc.daily.sheet + '" — tính theo định mức chuẩn sẽ ra số sai, ' +
@@ -873,6 +886,45 @@
     return count;
   }
 
+  /**
+   * Gỡ sheet liệt kê lỗi mà `markup.js` chèn vào bản đánh dấu.
+   *
+   * Người dùng tải bản đánh dấu của File báo cáo tổng, sửa `mail SF` rồi nạp lại
+   * làm file nền. Không gỡ thì sheet đó đi thẳng vào báo cáo gửi khách hàng.
+   */
+  function stripMarkupSheets(files, readText, writeText, report) {
+    var wbXml = readText('xl/workbook.xml');
+    var relsXml = readText('xl/_rels/workbook.xml.rels');
+    var rel = {};
+    (relsXml.match(/<Relationship\b[^>]*\/>/g) || []).forEach(function (t) {
+      var id = getAttr(t, 'Id'), tgt = getAttr(t, 'Target');
+      if (id && tgt) rel[id] = tgt.charAt(0) === '/' ? tgt.slice(1) : 'xl/' + tgt.replace(/^\.\//, '');
+    });
+
+    var dropped = [];
+    (wbXml.match(/<sheet\b[^>]*\/>/g) || []).forEach(function (tag) {
+      var nm = unesc(getAttr(tag, 'name') || '');
+      if (!/^Loi can sua( \d+)?$/.test(nm)) return;
+      var rid = getAttr(tag, 'r:id') || getAttr(tag, 'id');
+      var part = rel[rid];
+      wbXml = wbXml.replace(tag, '');
+      relsXml = relsXml.replace(new RegExp('<Relationship[^>]*Id="' + rid + '"[^>]*\\/>'), '');
+      if (part && files[part]) {
+        delete files[part];
+        writeText('[Content_Types].xml', readText('[Content_Types].xml')
+          .replace(new RegExp('<Override[^>]*PartName="/' + part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"[^>]*\\/>'), ''));
+      }
+      dropped.push(nm);
+    });
+
+    if (!dropped.length) return;
+    wbXml = wbXml.replace(/\s*activeTab="\d+"/, '');
+    writeText('xl/workbook.xml', wbXml);
+    writeText('xl/_rels/workbook.xml.rels', relsXml);
+    report.push('  gỡ ' + dropped.length + ' sheet đánh dấu lỗi khỏi file nền (' +
+      dropped.join(', ') + ') — không để lọt vào báo cáo gửi khách');
+  }
+
   /* ---------- điểm vào ---------- */
   function patch(masterBytes, blocks, cfg, opts) {
     opts = opts || {};
@@ -894,6 +946,16 @@
       if (id && tgt) rel[id] = tgt.charAt(0) === '/' ? tgt.slice(1) : 'xl/' + tgt.replace(/^\.\//, '');
     });
     var sheetPart = {};
+    (wbXml.match(/<sheet\b[^>]*\/>/g) || []).forEach(function (t) {
+      var nm = unesc(getAttr(t, 'name') || '');
+      var id = getAttr(t, 'r:id') || getAttr(t, 'id');
+      if (nm && rel[id]) sheetPart[nm] = rel[id];
+    });
+
+    /* Bản đánh dấu lỗi có thêm một sheet liệt kê — gỡ trước khi làm gì khác */
+    stripMarkupSheets(files, readText, writeText, report);
+    wbXml = readText('xl/workbook.xml');
+    sheetPart = {};
     (wbXml.match(/<sheet\b[^>]*\/>/g) || []).forEach(function (t) {
       var nm = unesc(getAttr(t, 'name') || '');
       var id = getAttr(t, 'r:id') || getAttr(t, 'id');

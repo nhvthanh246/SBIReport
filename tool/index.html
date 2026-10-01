@@ -20,11 +20,11 @@
 
     <label class="dropzone" id="dz">
       <div class="dz-icon">📥</div>
-      <div class="dz-main">Kéo cả 4 file vào đây</div>
-      <div class="dz-sub">hoặc bấm để chọn — tool tự nhận biết từng loại file</div>
+      <div class="dz-sub">Kéo thả các file data vào đây, định dạng .xlsx</div>
       <input type="file" id="dz-input" accept=".xlsx,.xlsm,.xls" multiple>
     </label>
 
+    <div class="needs-missing" id="needs-missing"></div>
     <div class="needs" id="needs"></div>
 
     <div class="row" style="margin-top:18px">
@@ -63,11 +63,18 @@
     <div class="fanpage" id="fanpage">
       <div class="fp-head">
         <span class="fp-t">Số <strong>follow</strong> fanpage</span>
-        <span class="fp-d">Mở extension <em>Facebook Fanpage Stats</em> → <b>Lấy số liệu hôm nay</b> → <b>Copy</b>, rồi dán vào đây. Số <strong>like</strong> tool tự chép của ngày gần nhất.</span>
+        <span class="fp-d">Bấm nút bên dưới, extension sẽ tự đọc 3 fanpage và đưa số sang đây. Số <strong>like</strong> tool tự chép của ngày gần nhất.</span>
       </div>
-      <textarea id="fanpage-in" rows="6" spellcheck="false"
-        placeholder="Dán 6 dòng từ extension vào đây — hoặc gõ 3 số theo thứ tự SBIR, SMILES, DCOM"></textarea>
-      <div class="fp-out" id="fanpage-out">Chưa dán số nào — 3 dòng follow sẽ để trống.</div>
+      <div class="fp-row">
+        <button id="fp-fetch" class="sm" disabled>Lấy số follow</button>
+        <span class="fp-ext" id="fp-ext">Đang tìm extension…</span>
+      </div>
+      <div class="fp-out" id="fanpage-out">Chưa có số nào — 3 dòng follow sẽ để trống.</div>
+      <details class="fp-manual">
+        <summary>Hoặc dán tay</summary>
+        <textarea id="fanpage-in" rows="6" spellcheck="false"
+          placeholder="Dán 6 dòng từ extension vào đây — hoặc gõ 3 số theo thứ tự SBIR, SMILES, DCOM"></textarea>
+      </details>
     </div>
 
     <div class="issue-group" id="issues"></div>
@@ -137,6 +144,38 @@
     </div>
   </details>
 
+  <details class="panel" id="sec-alias">
+    <summary>Đổi tên người lập case</summary>
+    <div class="pbody">
+      <p class="hint">
+        Khi một nhân viên lập case bằng tài khoản Salesforce dùng chung, tên trên case
+        không phải tên của họ. Các luật dưới đây đổi về tên thật trước khi tra email.
+        <br>Nhân viên đã có tài khoản riêng thì <b>xoá luật của họ đi</b>.
+      </p>
+
+      <div class="al-list" id="al-list"></div>
+
+      <div class="al-add">
+        <div class="al-add-t">Thêm luật mới</div>
+        <div class="al-add-row">
+          <label class="al-f">
+            <span class="lbl">Tên trên case (Salesforce)</span>
+            <input type="text" id="al-from" list="al-from-list" placeholder="vd: LUU NGOC QUANG" spellcheck="false">
+          </label>
+          <span class="al-arrow">→</span>
+          <label class="al-f">
+            <span class="lbl">Tên thật của nhân viên</span>
+            <input type="text" id="al-to" list="al-to-list" placeholder="vd: NGUYEN THAO NGUYEN" spellcheck="false">
+          </label>
+          <button id="al-add" class="primary sm">Thêm</button>
+        </div>
+        <datalist id="al-from-list"></datalist>
+        <datalist id="al-to-list"></datalist>
+        <div class="al-msg" id="al-msg"></div>
+      </div>
+    </div>
+  </details>
+
   <details class="panel" id="sec-config">
     <summary>Cấu hình ánh xạ</summary>
     <div class="pbody">
@@ -165,6 +204,7 @@
 <script src="src/pipeline.js"></script>
 <script src="src/writer.js"></script>
 <script src="src/xlsxpatch.js"></script>
+<script src="src/markup.js"></script>
 <script src="src/selftest.js"></script>
 <script src="src/app.js"></script>
 </body>

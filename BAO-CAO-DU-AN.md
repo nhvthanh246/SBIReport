@@ -36,7 +36,8 @@ So với báo cáo lần trước, ba thay đổi lớn:
 | Bảng KPI tháng | Xong | 37 người + dòng tổng team |
 | Bảng KPI ngày | Xong | Tự tính lại toàn bộ chuỗi công thức |
 | Ngày tháng ở đầu các tab | Xong | 6 vị trí |
-| Cảnh báo dữ liệu bất thường | Xong | 9 loại cảnh báo |
+| Cảnh báo dữ liệu bất thường | Xong | 9 loại, chỉ rõ tệp/dòng/ô |
+| Tải bản Excel đã đánh dấu để sửa | Xong | Tô vàng ô lỗi + sheet liệt kê |
 | Số like/follow fanpage | Xong | Nối với extension Chrome lấy số follow |
 | Tài liệu hướng dẫn người dùng | Xong | `HUONG-DAN-SU-DUNG.md` |
 | Chạy thử trong công việc thật | **Chưa** | Đề xuất chạy song song 1 tuần |
@@ -55,7 +56,7 @@ flowchart TD
     A2["<b>Daily Report CCVN</b><br/>case Salesforce<br/>380 – 550 dòng/ngày"]
     A3["<b>SBI Daily Report</b><br/>giờ làm nhân viên<br/>file dùng chung"]
     A4["<b>Báo cáo tổng HÔM QUA</b><br/>nền để cộng dồn cả tháng"]
-    A5["<b>Extension Chrome</b><br/>số follow 3 fanpage<br/>dán vào tool"]
+    A5["<b>Extension Chrome</b><br/>số follow 3 fanpage<br/>tự đưa sang tool"]
 
     A1 --> T
     A2 --> T
@@ -157,8 +158,13 @@ tay, nay máy đếm tự động. Đã đối chiếu **39/39 ô khớp chính 
 ### Nối với extension lấy số fanpage
 
 Bộ phận đã làm một extension Chrome tự đọc số **follow** của 3 fanpage (SBIR, SMILES,
-DCOM). Công cụ nay nhận số đó: bấm **Copy** trong extension, dán vào ô trong tool, và
-3 dòng follow được điền tự động.
+DCOM). Công cụ nay nối thẳng với extension: bấm một nút trong tool, extension đi lấy
+số rồi trả về, 3 dòng follow điền tự động — không phải copy-paste.
+
+Công cụ vẫn không tự đọc Facebook, và không thể: trình duyệt chặn trang web đọc dữ
+liệu từ tên miền khác, Facebook lại hiển thị số bằng JavaScript và đòi phiên đăng
+nhập. Chỉ extension mới mở được tab thật để lấy số. Việc nối hai bên giữ nguyên
+nguyên tắc **dữ liệu khách hàng không rời khỏi máy** — tool vẫn không gọi ra mạng.
 
 Riêng số **like**, phía SBI xác nhận chỉ cần ước lượng theo các ngày trước. Đối chiếu
 dữ liệu thật thì 3 số này **giữ nguyên suốt cả tháng** — tức người làm vẫn đang chép
@@ -167,6 +173,23 @@ lại của hôm trước. Công cụ làm đúng như vậy, và cảnh báo n�
 Chính luật cảnh báo đó phát hiện ngay một lỗi: fanpage DCOM có số like là `311k` suốt
 từ đầu tháng, nhưng từ ngày 14/9 bị gõ thành **`3111k`** — thừa một số 1, thành 3,1
 triệu like cho một trang chỉ có 393 nghìn người theo dõi. Lỗi này đã lan sang ngày 15.
+
+### Giao diện dễ dùng hơn theo góp ý của người dùng
+
+Hai điểm người dùng phản hồi, đã sửa xong:
+
+**Nạp file một lượt.** Trước đây có bốn ô riêng, phải chọn đúng loại cho từng ô. Giờ
+chỉ một vùng kéo thả: đổ tất cả file vào, tool tự phân loại, và một dòng ngay dưới cho
+biết còn thiếu nhóm nào.
+
+**Chỉ đúng chỗ lỗi.** Trước đây cảnh báo chỉ ghi kiểu "dòng 43" hoặc "không tra được
+email" — người làm không biết lỗi ở tệp nào. Giờ mỗi cảnh báo nêu rõ **tệp, sheet và
+từng ô** (ví dụ `Daily Report CCVN-14.09.xlsx › G104, G107, G133`).
+
+Thêm nữa, mỗi tệp có lỗi đều có nút **tải bản đã đánh dấu**: một bản copy của chính
+tệp đó, ô lỗi tô vàng, kèm một sheet liệt kê từng ô và cách sửa. Người làm sửa ngay
+trong đó rồi nạp lại. Nếu đó là bản của File báo cáo tổng, tool tự gỡ sheet liệt kê
+khi dùng làm file nền, nên không lọt vào báo cáo gửi khách hàng.
 
 ### Phát hiện thêm lỗi dữ liệu
 

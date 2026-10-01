@@ -10,12 +10,14 @@ tool làm gì, bạn phải làm gì, và **chỗ nào bắt buộc kiểm tra l
 
 ## Trước khi bắt đầu
 
-**Mở tool:** bấm đúp vào `tool/index.html`. Nó mở bằng trình duyệt như một trang web
-bình thường. Không cần cài gì, không cần mạng.
+**Mở tool:** vào địa chỉ web của tool, hoặc bấm đúp vào `tool/index.html` nếu dùng
+bản chạy trên máy. Không cần cài gì.
 
-**Về bảo mật:** file của bạn **không rời khỏi máy**. Tool chạy hoàn toàn trong trình
-duyệt, không gửi gì lên mạng, không lưu file lại. Đóng tab là mất hết. Vì dữ liệu có
-tên, ngày sinh, mã KH và số điện thoại của khách nên tool được làm như vậy ngay từ đầu.
+**Về bảo mật:** file của bạn **không rời khỏi máy**, kể cả khi mở tool qua địa chỉ web.
+Trình duyệt chỉ tải về phần giao diện; toàn bộ việc đọc và ghi file Excel diễn ra ngay
+trên máy bạn. Không có file nào được gửi đi, không có gì được lưu lại — đóng tab là hết.
+Vì dữ liệu có tên, ngày sinh, mã KH và số điện thoại của khách nên tool được làm như
+vậy ngay từ đầu.
 
 **Bốn file cần chuẩn bị:**
 
@@ -32,12 +34,22 @@ tên, ngày sinh, mã KH và số điện thoại của khách nên tool đượ
 
 ### 1. Nạp file
 
-Kéo **cả 4 file** vào ô lớn giữa màn hình. Tool tự nhận biết file nào là file nào —
-không cần thả đúng chỗ, không cần đổi tên.
+Kéo **tất cả file** vào ô lớn giữa màn hình, một lượt, thứ tự nào cũng được. Tool tự
+nhận biết từng loại — không cần chọn từng ô, không cần đổi tên file.
 
 Nếu có nhiều file OP (ví dụ mỗi team một file), thả hết vào, tool gộp lại.
 
-Nạp đủ 4 file thì nút **Xử lý** sáng lên. Bấm vào.
+Ngay dưới ô kéo thả có dòng cho biết **còn thiếu nhóm nào**:
+
+| Dòng đó ghi | Nghĩa |
+|---|---|
+| *Còn thiếu 1/4 nhóm: Daily Report CCVN* | Thiếu đúng nhóm đó, kéo thêm file vào |
+| *Đã đủ 4 nhóm file.* | Xong, bấm **Xử lý** |
+
+Bên dưới là 4 thẻ trạng thái. Thẻ nào chưa có file sẽ ghi **CHƯA CÓ**. Đây chỉ là
+thẻ để xem, không bấm được — mọi file đều nạp qua ô kéo thả phía trên.
+
+Nếu có file tool không nhận ra, nó sẽ báo tên file đó.
 
 ### 2. Đọc kết quả
 
@@ -50,17 +62,23 @@ Tool hiện:
 > ⚠️ **Đổi file sau khi đã bấm Xử lý thì phải bấm Xử lý lại.** Tool sẽ làm mờ màn hình
 > và khoá nút tải để nhắc bạn. Nếu không, bạn sẽ tải ra file dựng từ dữ liệu cũ.
 
-### 2b. Dán số follow fanpage
+### 2b. Lấy số follow fanpage
 
-Trong phần kết quả có ô **"Số follow fanpage"**.
+Trong phần kết quả có khối **"Số follow fanpage"**. Bấm **Lấy số follow** — extension
+tự mở 3 fanpage, đọc số, và đưa thẳng sang tool. Mất khoảng một phút; tool hiện tiến
+độ "Đang đọc SMILES (2/3)…" trong lúc chờ.
 
-1. Mở extension **Facebook Fanpage Stats** trên thanh công cụ Chrome
-2. Bấm **Lấy số liệu hôm nay** — extension tự mở 3 fanpage và đọc số
-3. Bấm **Copy**
-4. Dán vào ô trong tool
+Bên cạnh nút có dòng trạng thái:
 
-Tool đọc ra 3 số và hiện lại để bạn đối chiếu. Dán thiếu hoặc sai định dạng thì tool
-báo ngay chứ không đoán bừa thứ tự.
+| Dòng trạng thái | Nghĩa |
+|---|---|
+| *Đã thấy extension* | Sẵn sàng, bấm nút là chạy |
+| *Không thấy extension — dùng ô "Hoặc dán tay"* | Xem mục [Extension không kết nối](#extension-không-kết-nối) |
+| *Facebook chỉ cho số làm tròn ở …* | Trang đó Facebook chỉ hiện "394K" chứ không hiện số chính xác — kiểm tra lại trước khi gửi |
+
+Nếu không dùng được nút tự động, mở phần **"Hoặc dán tay"**: bấm **Copy** trong
+extension rồi dán vào ô đó. Tool đọc thiếu hoặc sai định dạng thì báo ngay chứ không
+đoán bừa thứ tự.
 
 > **Số like thì sao?** Phía SBI xác nhận chỉ cần ước lượng theo các ngày trước. Đối
 > chiếu dữ liệu thật thì 3 số like giữ nguyên suốt cả tháng, nên tool **tự chép lại
@@ -70,6 +88,11 @@ báo ngay chứ không đoán bừa thứ tự.
 > hiện DCOM bị gõ nhầm `3111k` (thừa một số 1) từ ngày 14/9, trong khi cả tháng là `311k`.
 
 Bỏ qua bước này cũng được: 3 dòng follow để trống, phần còn lại vẫn chạy bình thường.
+
+> **Vì sao phải qua extension mà tool không tự lấy?** Trang web không được phép đọc
+> dữ liệu từ Facebook — trình duyệt chặn vì lý do bảo mật. Facebook lại hiển thị số
+> bằng JavaScript và đòi phiên đăng nhập, nên phải mở tab thật mới thấy được số.
+> Chỉ extension mới làm được việc đó.
 
 ### 3. Tải file báo cáo tổng
 
@@ -151,6 +174,36 @@ Một số dòng tool **cố tình để trống**, và sẽ nói rõ lý do tro
   vì 15/30/17/20 như mọi người. Tool tính theo định mức chuẩn sẽ ra sai (0.74 thay vì 1.86),
   nên thà để trống cho bạn nhập tay.
 - **Dòng Leader / JP Staff** — do nguồn khác điền.
+
+---
+
+## Lỗi nằm ở đâu — và cách sửa nhanh
+
+Mỗi cảnh báo giờ chỉ rõ **tệp nào, sheet nào, ô nào**. Ví dụ:
+
+> **1 tên không tra được email trong bảng `mail SF`**
+> Daily Report CCVN-14.09.xlsx › Daily Report CCVN
+> `G104` `G107` `G133` `G157` … `+14 ô nữa`
+
+Trỏ chuột vào từng ô để xem giá trị hiện tại và lý do.
+
+### Tải bản đã đánh dấu để sửa
+
+Cuối phần cảnh báo có khối **"Tải bản đã đánh dấu để sửa"**, mỗi tệp có lỗi một nút.
+
+Bấm vào, bạn được một **bản copy của chính tệp đó**, trong đó:
+
+- Các ô lỗi được **tô vàng**
+- Thêm một sheet **`Loi can sua`** ở đầu file, liệt kê từng ô: sheet, địa chỉ ô, giá
+  trị hiện tại, vấn đề là gì, cần làm gì
+
+Cách dùng: mở bản đánh dấu → sửa các ô vàng → **lưu** → nạp lại file đó vào tool.
+
+> Màu vàng và sheet `Loi can sua` **không ảnh hưởng gì đến xử lý**. Nếu bạn sửa bản
+> đánh dấu của *File báo cáo tổng* rồi nạp lại làm file nền, tool tự gỡ sheet đó ra
+> nên nó không lọt vào báo cáo gửi khách hàng.
+>
+> Tên file tải về có đuôi `_DA-DANH-DAU.xlsx` để không lẫn với file gốc.
 
 ---
 
@@ -242,6 +295,43 @@ Mở file bằng Excel rồi soát theo thứ tự này:
 
 ---
 
+## Đổi tên người lập case
+
+Khi một nhân viên lập case bằng **tài khoản Salesforce dùng chung**, tên trên case không
+phải tên của họ. Tool đổi về tên thật trước khi tra email.
+
+Mở panel **"Đổi tên người lập case"** ở cuối trang. Mỗi luật là một dòng:
+
+> `LUU NGOC QUANG` → `NGUYEN THAO NGUYEN` · *đã đổi 20 case hôm nay* · [Xoá luật]
+
+### Nhân viên đã có tài khoản riêng
+
+Bấm **Xoá luật** ở dòng của người đó. Tool tính lại báo cáo ngay, từ lần sau giữ nguyên
+tên gốc từ Salesforce.
+
+Nhớ làm thêm: thêm tên và email thật của họ vào `mail SF` và hai sheet KPI
+(xem [Thêm nhân viên mới](#thêm-nhân-viên-mới)).
+
+### Thêm luật mới
+
+Điền hai ô rồi bấm **Thêm**. Cả hai ô đều có **gợi ý tự động**:
+
+- Ô bên trái gợi ý các tên **thật có trong file Salesforce** bạn vừa nạp
+- Ô bên phải gợi ý các tên **có trong bảng `mail SF`**
+
+Nếu tên đích không có trong `mail SF`, tool hiện luật đó **viền đỏ** kèm cảnh báo — vì
+case đổi sang tên đó sẽ không tra được email.
+
+### Hai điều cần biết
+
+- Số *"đã đổi N case hôm nay"* chỉ hiện sau khi bấm **Xử lý**. Luật ghi *"không có case
+  nào hôm nay"* nghĩa là hôm nay người đó không lập case — không phải luật sai.
+- Cấu hình lưu trong **trình duyệt của từng máy**. Nhiều người dùng tool thì mỗi người
+  phải sửa, hoặc dùng **Xuất .json** / **Nhập .json** ở panel *Cấu hình ánh xạ* để dùng
+  chung một bản.
+
+---
+
 ## Đối chứng — khi nào dùng
 
 Trong tool có mục **Đối chứng** (gập lại ở cuối trang). Nạp thêm *file tổng chuẩn* của
@@ -271,6 +361,18 @@ chưa có dấu tích là còn thiếu.
 
 **Excel báo file hỏng khi mở** — báo ngay người quản lý tool, kèm theo cả 4 file đầu vào.
 Đừng tự sửa.
+
+**Extension không kết nối** <a id="extension-không-kết-nối"></a>
+
+Lần lượt kiểm tra:
+
+1. Extension đã cài và đang bật chưa — vào `chrome://extensions`
+2. Extension phải từ **phiên bản 1.6.0** trở lên mới nhận ra trang tool trên web
+3. Chỉ khi mở tool bằng cách **bấm đúp vào file**: trong `chrome://extensions`, bấm
+   **Chi tiết** ở extension rồi bật **"Cho phép truy cập URL tệp"**. Mở qua địa chỉ
+   web thì không cần bước này.
+4. Tải lại trang tool sau khi bật
+5. Vẫn không được thì dùng ô **"Hoặc dán tay"** — kết quả y hệt
 
 **Ngày báo cáo tool đoán sai** — sửa ở ô *Đổi ngày* rồi bấm *Áp dụng*. Tool tính lại toàn bộ.
 
