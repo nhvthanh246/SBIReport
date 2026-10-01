@@ -110,6 +110,7 @@
         session: session, ccvn: ccvn, ops: ops,
         emailTable: mail && mail.table
       }, cfg, serial);
+      Pipeline.checkRoster({ emailTable: mail && mail.table }, cfg, base.wb, blocks, blocks.warnings);
       var patched = XlsxPatch.patch(base.bytes, blocks, cfg, { masterWb: base.wb });
       var refMail = Pipeline.inspectMailSf(ref.wb, cfg, []);
       var affected = {};

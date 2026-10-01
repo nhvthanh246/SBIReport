@@ -295,6 +295,52 @@ Mở file bằng Excel rồi soát theo thứ tự này:
 
 ---
 
+## Thêm nhân viên mới
+
+Tool **tự phát hiện** người làm việc hôm nay mà chưa có dòng KPI, và báo **lỗi đỏ** kèm
+tên, email, bằng chứng và chỗ cần thêm. Ví dụ:
+
+> **1 người có việc hôm nay nhưng CHƯA có dòng trong "Daily KPI Result"**
+> NGUYEN THI THANH THUY `<thuy.ntt1@altius-link.com.vn>` — thấy ở: phiên chat/CSKH (81),
+> case Salesforce (11), giờ làm (8). KPI của họ sẽ KHÔNG được tính.
+> Chèn dòng mới ở "Daily KPI Result" ngay sau **dòng 54**…
+
+Không có cảnh báo này nghĩa là danh sách đã đủ, không phải làm gì.
+
+### Thêm một lần, dùng mãi
+
+Khi thấy cảnh báo, thêm nhân viên vào **3 chỗ trong File báo cáo tổng**:
+
+| # | Sheet | Làm gì |
+|---|---|---|
+| 1 | `mail SF` | Thêm tên (cột C) + email (cột D) |
+| 2 | `Daily KPI Result` | Chèn dòng ở vị trí tool chỉ, điền email vào cột D, **copy công thức từ một dòng nhân viên bình thường ở trên** |
+| 3 | `202609 KPI Result` | Thêm dòng ở cuối danh sách, điền tên và email |
+
+Xong 3 chỗ đó thì **từ hôm sau tự động hoàn toàn**.
+
+> **Chú ý khi copy công thức ở bước 2:** đừng copy từ dòng cuối cùng. Một nhân viên
+> đang dùng **định mức KPI riêng** (10/10/10/15 thay vì 15/30/17/20) — copy từ dòng đó
+> thì nhân viên mới bị tính sai gần 3 lần. Copy từ một dòng ở giữa danh sách.
+
+Nếu quên bước 3, tool cũng báo riêng: *"N người có trong Daily KPI Result nhưng CHƯA có
+dòng ở sheet KPI tháng — KPI của họ không được ghi vào đâu cả."*
+
+### Nhân viên nghỉ việc
+
+**Không cần làm gì.** Tool chỉ ghi số cho người có dữ liệu; người đã nghỉ sẽ ra 0 và
+không ảnh hưởng ai. Muốn sheet gọn thì xoá dòng của họ ở cả 3 chỗ trên — nhưng không bắt buộc.
+
+### Vì sao tool không tự chèn dòng
+
+Hai sheet KPI có dòng tổng `=SUM(...)` ngay dưới danh sách và hàng trăm công thức tra
+sang `Sheet5`. Tool sửa file bằng cách can thiệp trực tiếp vào cấu trúc Excel, nên nếu
+tự chèn dòng thì **mọi tham chiếu phải tự tay dịch lại** — sai một chỗ là số liệu lệch
+mà không có dấu hiệu gì. Việc thêm nhân viên lại chỉ xảy ra vài tháng một lần và mất
+chưa đến một phút, nên tool chọn cách chỉ đúng chỗ thay vì tự làm.
+
+---
+
 ## Đổi tên người lập case
 
 Khi một nhân viên lập case bằng **tài khoản Salesforce dùng chung**, tên trên case không

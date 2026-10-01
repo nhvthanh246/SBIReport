@@ -750,6 +750,82 @@
   }
 
   /* =====================================================================
+   * Soát danh sách nhân viên: ai có việc hôm nay mà chưa có dòng KPI
+   * ===================================================================== */
+
+  /**
+   * Nhân viên mới làm xong một ngày nhưng chưa được thêm dòng ở "Daily KPI Result"
+   * thì KPI của họ KHÔNG đi đâu cả — và không có dấu hiệu gì cho thấy đang thiếu.
+   * Hàm này bắt đúng trường hợp đó, kèm tên (tra ngược từ `mail SF`) và số dòng
+   * cần chèn, để người làm thêm một lần là xong.
+   *
+   * KHÔNG tự chèn dòng: hai sheet KPI có dòng tổng `=SUM(...)` ngay dưới và hàng
+   * trăm công thức tra Sheet5; chèn dòng bằng cách sửa XML thì mọi tham chiếu phải
+   * tự tay dịch lại, sai một chỗ là số liệu lệch mà không ai thấy. Đổi lại, báo
+   * đúng chỗ cần thêm thì việc tay chỉ còn vài chục giây.
+   */
+  function checkRoster(input, cfg, masterWb, blocks, warnings) {
+    var kc = cfg.kpi;
+    if (!kc || !masterWb) return null;
+    var ws = masterWb.Sheets[kc.daily.sheet];
+    if (!ws) return null;
+
+    /* --- ai có việc hôm nay --- */
+    var active = {};
+    function scan(rows, col, label) {
+      (rows || []).forEach(function (r) {
+        var e = P.cellToString(r[col]).trim();
+        if (e.indexOf('@') === -1) return;
+        var k = P.normText(e);
+        var a = active[k] || (active[k] = { email: e, where: {} });
+        a.where[label] = (a.where[label] || 0) + 1;
+      });
+    }
+    scan(blocks.block1.rows, B1_SUPPORTER, 'phiên chat/CSKH');
+    scan(blocks.block2.rows, B2_EMAIL, 'case Salesforce');
+    scan(blocks.block3.rows, B3_EMAIL, 'giờ làm');
+
+    /* --- ai đã có dòng KPI --- */
+    var m = P.sheetToMatrix(ws);
+    var roster = {}, lastRow = 0;
+    var end = kc.daily.peopleEndRow || kc.daily.dataEndRow;
+    for (var r = kc.daily.dataStartRow - 1; r < end; r++) {
+      var e2 = P.cellToString((m.rows[r] || [])[kc.daily.emailColumn]).trim();
+      if (e2.indexOf('@') !== -1) { roster[P.normText(e2)] = r + 1; lastRow = r + 1; }
+    }
+    if (!lastRow) return null;
+
+    /* --- tra ngược email -> tên, từ bảng `mail SF` --- */
+    var byEmail = {};
+    var tbl = (input.emailTable && Object.keys(input.emailTable).length)
+      ? input.emailTable : (cfg.supporterEmails || {});
+    Object.keys(tbl).forEach(function (nm) { byEmail[P.normText(tbl[nm])] = nm; });
+
+    var missing = Object.keys(active).filter(function (k) { return !roster[k]; });
+    if (!missing.length) return { missing: [], lastRow: lastRow };
+
+    var items = missing.map(function (k) {
+      var a = active[k];
+      return { email: a.email, name: byEmail[k] || null,
+               where: Object.keys(a.where).map(function (w) { return w + ' (' + a.where[w] + ')'; }).join(', ') };
+    });
+
+    warn(warnings, 'error',
+      items.length + ' người có việc hôm nay nhưng CHƯA có dòng trong "' + kc.daily.sheet + '"',
+      items.map(function (it) {
+        return (it.name ? it.name + ' <' + it.email + '>' : it.email + ' (chưa có tên trong `mail SF`)') +
+               ' — thấy ở: ' + it.where;
+      }).join(' · ') +
+      '. KPI của họ sẽ KHÔNG được tính. Cách thêm, làm một lần trong File báo cáo tổng: ' +
+      'chèn dòng mới ở "' + kc.daily.sheet + '" ngay sau dòng ' + lastRow +
+      ' (cột ' + XLSX.utils.encode_col(kc.daily.emailColumn) + ' là email, copy công thức từ ' +
+      'một dòng nhân viên bình thường ở trên), thêm dòng tương ứng ở sheet KPI tháng, ' +
+      'và thêm tên + email vào tab `mail SF` nếu chưa có.');
+
+    return { missing: items, lastRow: lastRow };
+  }
+
+  /* =====================================================================
    * 6 dòng fanpage — đọc số Follow dán từ extension
    * ===================================================================== */
 
@@ -1035,6 +1111,7 @@
     inspectMailSf: inspectMailSf,
     parseFanpage: parseFanpage,
     collectSpots: collectSpots,
+    checkRoster: checkRoster,
     buildBlocks: buildBlocks,
     BLOCK1_HEADERS: BLOCK1_HEADERS,
     BLOCK3_HEADERS: BLOCK3_HEADERS

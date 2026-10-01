@@ -331,6 +331,14 @@
       fanpageText: state.fanpageText
     }, state.cfg, state.reportSerial);
 
+    /* Soát danh sách nhân viên: ai có việc hôm nay mà chưa có dòng KPI.
+       Chạy sau buildBlocks vì cần biết ai thực sự xuất hiện trong dữ liệu. */
+    if (state.files.master) {
+      state.roster = Pipe.checkRoster(
+        { emailTable: state.mailSf && state.mailSf.table },
+        state.cfg, state.files.master.wb, state.blocks, state.blocks.warnings);
+    }
+
     state.ranSignature = fileSignature();
     clearStale();
     renderResult();

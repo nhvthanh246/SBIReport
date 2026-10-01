@@ -137,10 +137,15 @@ h1, h2, h3 { margin: 0; font-weight: 640; letter-spacing: -0.015em; }
 .dropzone .dz-sub { color: var(--ink-2); font-size: 13px; margin-top: 4px; }
 
 /* Đã có file rồi thì thu gọn lại, nhường chỗ cho phần kết quả */
+/* Thu gọn khi đã có file: bỏ icon, chữ nhỏ lại — nhưng KHÔNG ẩn dòng chữ nào.
+   Trước đây ẩn .dz-sub vì bên trên còn .dz-main; markup giờ chỉ còn một dòng,
+   ẩn nó đi là vùng kéo thả trống trơn, không ai biết thả vào đâu. */
 .dropzone.compact { padding: 13px 18px; }
 .dropzone.compact .dz-icon { display: none; }
 .dropzone.compact .dz-main { font-size: 13px; font-weight: 600; color: var(--ink-2); }
-.dropzone.compact .dz-sub { display: none; }
+.dropzone.compact .dz-sub { font-size: 12.5px; margin-top: 0; }
+/* Có cả hai dòng thì dòng phụ mới cần lùi xuống */
+.dropzone.compact .dz-main + .dz-sub { margin-top: 3px; }
 
 /* danh sách file cần có */
 .needs {
