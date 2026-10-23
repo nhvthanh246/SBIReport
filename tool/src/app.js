@@ -30,7 +30,7 @@
     /* chữ ký bộ file lúc bấm Xử lý; khác chữ ký hiện tại = kết quả đã cũ */
     ranSignature: null, stale: false,
     /* số follow fanpage dán từ extension — không phải file nên không tính vào chữ ký */
-    fanpageText: ''
+    fanpageText: '', uiWarnings: []
   };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -52,7 +52,7 @@
   function loadConfig() {
     var stored = null;
     try { stored = localStorage.getItem(CFG_KEY); } catch (e) { /* storage bị chặn */ }
-    if (stored) { try { return JSON.parse(stored); } catch (e) { /* hỏng -> mặc định */ } }
+    if (stored) { try { return C.migrate(JSON.parse(stored)); } catch (e) { /* hỏng -> mặc định */ } }
     return C.defaults();
   }
   function saveConfig(cfg) {
@@ -64,18 +64,27 @@
     e.textContent = text;
     e.style.color = kind === 'err' ? 'var(--err)' : kind === 'ok' ? 'var(--ok)' : 'var(--ink-2)';
   }
-  function paintConfigEditor() { $('cfg-text').value = JSON.stringify(state.cfg, null, 2); }
+  function paintStartTimeSource() {
+    var start = state.cfg.session.stagingColumns[3];
+    var source = start && start.from;
+    $('start-time-source').value = ['First response time', 'Requested time', 'Assign time'].indexOf(source) !== -1
+      ? source : 'custom';
+  }
+  function paintConfigEditor() {
+    $('cfg-text').value = JSON.stringify(state.cfg, null, 2);
+    paintStartTimeSource();
+  }
   function readConfigFromEditor() {
     var raw = $('cfg-text').value.trim();
     if (!raw) return null;
-    try { var p = JSON.parse(raw); cfgStatus('', ''); return p; }
+    try { var p = C.migrate(JSON.parse(raw)); cfgStatus('', ''); return p; }
     catch (e) { cfgStatus('JSON không hợp lệ — giữ cấu hình đã lưu', 'err'); return null; }
   }
 
   /* ================= nạp file ================= */
 
   var READ_OPTS = { type: 'array', cellFormula: false, cellHTML: false,
-                    cellDates: false, cellNF: false, cellText: false };
+                    cellDates: false, cellNF: true, cellText: false };
 
   function readFile(file) {
     return new Promise(function (resolve, reject) {
@@ -130,14 +139,14 @@
     state.stale = true;
     ['sec-result', 'sec-export'].forEach(function (id) { $(id).classList.add('is-stale'); });
     Array.prototype.forEach.call(
-      document.querySelectorAll('#cta-master button, #outputs button'),
+      document.querySelectorAll('#cta-master button, #outputs button, #marked-downloads button'),
       function (b) { b.disabled = true; });
     $('btn-all').disabled = true;
     var box = $('stale-note');
     box.classList.remove('hidden');
     box.innerHTML = '';
-    box.appendChild(issueEl('warn', 'Danh sách file đã thay đổi — kết quả bên dưới là của bộ file cũ',
-      'Bấm Xử lý lại để dựng theo bộ file hiện tại. Các nút tải đã được khoá để tránh tải nhầm bản cũ.'));
+    box.appendChild(issueEl('warn', 'File hoặc cấu hình đã thay đổi — kết quả bên dưới chưa được cập nhật',
+      'Bấm Xử lý lại để áp dụng dữ liệu và cấu hình hiện tại. Các nút tải đã được khoá để tránh tải nhầm bản cũ.'));
   }
 
   function clearStale() {
@@ -149,8 +158,11 @@
 
   function showTopIssue(title, detail) {
     $('sec-result').classList.remove('hidden');
-    var box = $('issues');
-    box.insertBefore(issueEl('error', title, detail), box.firstChild);
+    state.uiWarnings = state.uiWarnings.filter(function (w) {
+      return w.message !== title || w.detail !== detail;
+    });
+    state.uiWarnings.unshift({ level: 'error', message: title, detail: detail });
+    renderIssues();
   }
 
   /** Thẻ cho từng loại file cần nạp — là <label> bọc input ẩn, bấm đâu cũng mở hộp chọn. */
@@ -202,11 +214,18 @@
   }
 
   /** Chữ ký của bộ file đang nạp — đổi chữ ký nghĩa là kết quả cũ không còn dùng được. */
+  var sourceSeq = 0;
   function fileSignature() {
+    function sourceId(f) {
+      if (!f) return '';
+      /* Hai lần nạp cùng tên vẫn có thể là hai nội dung khác nhau. */
+      if (!f.sourceId) f.sourceId = ++sourceSeq;
+      return f.name + '#' + f.sourceId;
+    }
     return SLOTS.map(function (s) {
       var f = state.files[s.key];
-      if (s.multi) return s.key + ':' + (f || []).map(function (x) { return x.name; }).join(',');
-      return s.key + ':' + (f ? f.name : '');
+      if (s.multi) return s.key + ':' + (f || []).map(sourceId).join(',');
+      return s.key + ':' + sourceId(f);
     }).join('|');
   }
 
@@ -278,6 +297,7 @@
   /* ================= chạy pipeline ================= */
 
   function run() {
+    state.uiWarnings = [];
     if (!state.files.session) return;
     busy(true, 'Đang xử lý…');
     setTimeout(function () {
@@ -303,9 +323,17 @@
         $('sec-export').classList.remove('hidden');
         $('sec-preview').classList.remove('hidden');
       } catch (e) {
-        $('sec-result').classList.remove('hidden');
-        $('issues').innerHTML = '';
-        $('issues').appendChild(issueEl('error', 'Không xử lý được', e.message));
+        if (state.blocks) markStale();
+        state.blocks = null;
+        state.session = state.ccvn = null;
+        state.ops = []; state.extraWarnings = [];
+        $('metrics').innerHTML = '';
+        $('rh-date').textContent = 'Chưa có kết quả báo cáo';
+        $('rh-sub').textContent = '';
+        $('sec-result').classList.remove('is-stale');
+        $('sec-export').classList.add('hidden');
+        $('sec-preview').classList.add('hidden');
+        showTopIssue('Không xử lý được', e.message);
       }
       busy(false);
     }, 20);
@@ -327,20 +355,23 @@
 
     state.blocks = Pipe.buildBlocks({
       session: state.session, ccvn: state.ccvn, ops: state.ops,
-      emailTable: state.mailSf && state.mailSf.table,
-      fanpageText: state.fanpageText
+      emailTable: state.mailSf && state.mailSf.table
+      /* Fanpage được đọc riêng ở applyFanpage để cảnh báo cập nhật ngay khi gõ,
+         không giữ lại cảnh báo cũ trong blocks.warnings. */
     }, state.cfg, state.reportSerial);
 
     /* Soát danh sách nhân viên: ai có việc hôm nay mà chưa có dòng KPI.
        Chạy sau buildBlocks vì cần biết ai thực sự xuất hiện trong dữ liệu. */
     if (state.files.master) {
       state.roster = Pipe.checkRoster(
-        { emailTable: state.mailSf && state.mailSf.table },
+        { emailTable: state.mailSf && state.mailSf.table, ops: state.ops },
         state.cfg, state.files.master.wb, state.blocks, state.blocks.warnings);
     }
 
     state.ranSignature = fileSignature();
+    state.uiWarnings = [];
     clearStale();
+    applyFanpage();
     renderResult();
     renderExport();
     renderPreviewPicker();
@@ -382,8 +413,8 @@
     var swapped = state.ops.reduce(function (a, o) { return a + o.stats.swapped; }, 0);
     var accepted = !!(state.cfg.op && state.cfg.op.acceptSwappedDates);
     if (swapped) {
-      metric(swapped, 'Dòng đảo ngày/tháng',
-        accepted ? 'đã tính vào báo cáo' : 'đang bị bỏ sót', accepted ? '' : 'is-alert');
+      metric(swapped, 'Dòng có thể đảo ngày/tháng',
+        accepted ? 'đã tính theo tùy chọn' : 'chưa tính vào báo cáo', accepted ? '' : 'is-alert');
     }
 
     /* ---- ô tích nhận dòng đảo ngày ---- */
@@ -392,8 +423,8 @@
     opt.classList.toggle('hot', !!swapped && !accepted);
     if (swapped) {
       $('opt-swapped-d').textContent = accepted
-        ? swapped + ' dòng đã được tính vào báo cáo.'
-        : swapped + ' dòng đang bị bỏ sót. Lỗi locale lúc nhập liệu — tích vào để tính.';
+        ? swapped + ' dòng đã được nhận theo tùy chọn. Cần xác nhận ngày làm việc để tránh lấy nhầm ngày khác.'
+        : swapped + ' dòng chưa được nhận. Kiểm tra ngày làm việc trước khi sửa nguồn hoặc bật tùy chọn.';
     }
 
     renderFanpage();
@@ -502,13 +533,13 @@
      Đọc lại ngay khi gõ: rẻ hơn dựng lại cả 3 khối, và người dùng thấy phản hồi tức thì. */
   function applyFanpage() {
     /* Đọc được ngay cả khi chưa nạp file: người dùng hay lấy số fanpage trước.
-       Khi bấm Xử lý, `rebuild()` truyền lại `state.fanpageText` nên vẫn đi chung
-       một đường, không có hai nguồn sự thật. */
+       rebuild() cũng gọi hàm này để số liệu và cảnh báo luôn cùng một nguồn. */
     var w = [];
     state.fanpageParsed = Pipe.parseFanpage(state.fanpageText, state.cfg, w);
     state.fanpageWarnings = w;
     if (state.blocks) state.blocks.fanpage = state.fanpageParsed;
     renderFanpage();
+    if (state.blocks) renderIssues();
   }
 
   function renderFanpage() {
@@ -538,13 +569,35 @@
   function issueEl(kind, title, detail, w) {
     var d = el('div', 'issue ' + kind);
     d.appendChild(el('span', 'ic', '●'));
-    var b = el('span', 'ib');
-    b.appendChild(el('span', 'it', title));
-    if (detail) b.appendChild(el('span', 'id', detail));
-    /* Vị trí lỗi: tệp nào, sheet nào, ô nào — để khỏi phải tự dò */
-    if (w) {
-      var sb = spotBlock(w);
-      if (sb) b.appendChild(sb);
+    var b = el('div', 'ib');
+    var copy = w && w.display;
+    b.appendChild(el('span', 'it', copy ? copy.title : title));
+    if (copy) b.appendChild(el('span', 'id', copy.summary));
+    else if (detail) b.appendChild(el('span', 'id', detail));
+    var sb = w && spotBlock(w);
+    /* Giữ đầy đủ bằng chứng, nhưng không bắt người dùng đọc cả đoạn dài trước
+       khi biết vấn đề là gì. Chỉ thu gọn chi tiết, không thu gọn lời cảnh báo. */
+    if (copy || sb) {
+      var more = el('details', 'fold issue-detail');
+      more.open = false;
+      more.appendChild(el('summary', null, sb ? 'Xem chi tiết và vị trí ô' : 'Xem chi tiết'));
+      more.appendChild(detailField('Vấn đề ghi nhận', title, 'finding'));
+      if (copy && copy.impact) more.appendChild(detailField('Ảnh hưởng', copy.impact, 'impact'));
+      if (copy && copy.action) more.appendChild(detailField('Cần làm', copy.action, 'action'));
+      if (copy && copy.note) more.appendChild(detailField('Lưu ý', copy.note, 'note'));
+      (copy && copy.tables || []).forEach(function (table) { more.appendChild(detailTable(table)); });
+      if (sb) more.appendChild(sb);
+      if (copy && detail) {
+        /* Bản giải thích nguyên gốc vẫn tra được, không lặp lại cả đoạn danh sách
+           dài ngay phía trên bảng đã trình bày cùng dữ liệu. */
+        if (copy.tables || copy.impact || copy.action || sb) {
+          var original = el('details', 'fold detail-original');
+          original.appendChild(el('summary', null, 'Giải thích đầy đủ'));
+          original.appendChild(detailField('Thông tin bổ sung', detail, 'note'));
+          more.appendChild(original);
+        } else more.appendChild(detailField('Chi tiết', detail, 'note'));
+      }
+      b.appendChild(more);
     }
     d.appendChild(b);
     return d;
@@ -582,12 +635,12 @@
     var host = $('al-list');
     if (!host) return;
     var tbl = aliasTable();
-    var keys = Object.keys(tbl);
+    var keys = Object.keys(tbl).filter(function (k) { return !!tbl[k]; });
     var hits = (state.blocks && state.blocks.aliasHits) || null;
     host.innerHTML = '';
 
     if (!keys.length) {
-      host.appendChild(el('div', 'al-empty', 'Chưa có luật nào — mọi tên giữ nguyên như Salesforce xuất ra.'));
+      host.appendChild(el('div', 'al-empty', 'Không có luật đổi tên toàn bộ. Các điều chỉnh theo từng case (nếu có) nằm trong approvedAdjustments.'));
     }
 
     keys.forEach(function (from) {
@@ -608,8 +661,8 @@
       var del = el('button', 'al-del', 'Xoá luật');
       del.title = 'Dùng khi nhân viên đã có tài khoản Salesforce riêng';
       del.addEventListener('click', function () {
-        delete aliasTable()[from];
-        commitAliases('Đã xoá luật "' + from + '". Từ lần chạy sau tool giữ nguyên tên gốc.');
+        aliasTable()[from] = false; /* Giữ dấu tắt để migrate không khôi phục mặc định. */
+        commitAliases('Đã tắt luật toàn bộ cho "' + from + '". Điều chỉnh theo từng case (nếu có) vẫn áp dụng.');
       });
       row.appendChild(del);
 
@@ -668,11 +721,11 @@
     }
     var tbl = aliasTable();
     var dup = Object.keys(tbl).filter(function (k) { return P.normName(k) === P.normName(from); })[0];
-    if (dup) {
+    if (dup && tbl[dup]) {
       aliasMsg('Đã có luật cho "' + dup + '" (→ ' + tbl[dup] + '). Xoá luật cũ trước nếu muốn đổi.', 'err');
       return;
     }
-    tbl[from] = to;
+    tbl[dup || from] = to;
     $('al-from').value = '';
     $('al-to').value = '';
     var note = 'Đã thêm luật "' + from + '" → "' + to + '".';
@@ -683,11 +736,48 @@
 
   /* ================= hiện vị trí lỗi & tải file đã đánh dấu ================= */
 
-  var SPOT_SHOW = 12;
+  /** Các giá trị từ file luôn được ghi bằng textContent, không diễn giải thành HTML. */
+  function detailField(label, value, kind) {
+    var box = el('div', 'detail-field detail-' + kind);
+    box.appendChild(el('strong', 'detail-label', label));
+    box.appendChild(el('div', 'detail-value', value));
+    return box;
+  }
+
+  function detailTable(spec) {
+    var wrap = el('div', 'detail-table-scroll');
+    wrap.setAttribute('tabindex', '0');
+    wrap.setAttribute('role', 'region');
+    wrap.setAttribute('aria-label', spec.title);
+    var table = el('table', 'detail-table' + (spec.spots ? ' detail-spot-table' : ''));
+    var caption = el('caption', null, spec.title + ' (' + spec.rows.length + ')');
+    caption.appendChild(el('span', 'detail-table-hint', 'Vuốt ngang để xem đủ các cột.'));
+    table.appendChild(caption);
+    var head = el('thead'), header = el('tr');
+    spec.headers.forEach(function (label) {
+      var th = el('th', null, label); th.setAttribute('scope', 'col'); header.appendChild(th);
+    });
+    head.appendChild(header); table.appendChild(head);
+    var body = el('tbody');
+    spec.rows.forEach(function (values) {
+      var row = el('tr');
+      spec.headers.forEach(function (_, index) {
+        var value = values[index];
+        var blank = value === '' || value === null || value === undefined;
+        var cell = el(index === 0 ? 'th' : 'td', blank ? 'detail-empty' : null,
+          blank ? '(trống)' : String(value));
+        if (index === 0) cell.setAttribute('scope', 'row');
+        row.appendChild(cell);
+      });
+      body.appendChild(row);
+    });
+    table.appendChild(body); wrap.appendChild(table);
+    return wrap;
+  }
 
   /** Gom mọi cảnh báo đang có trên màn hình thành một danh sách. */
   function allWarnings() {
-    var all = (state.extraWarnings || []).slice();
+    var all = state.uiWarnings.concat(state.extraWarnings || []);
     [state.session, state.ccvn].concat(state.ops).forEach(function (r) {
       if (r && r.warnings) all = all.concat(r.warnings);
     });
@@ -702,7 +792,7 @@
       : (MK.numToCol(sp.col) + sp.row);
   }
 
-  /** Khối "lỗi ở đâu": tệp → sheet → danh sách ô, kèm nút tải bản đánh dấu. */
+  /** Hiện đủ vị trí đã lưu, giá trị và lý do; không giấu thông tin trong tooltip. */
   function spotBlock(w) {
     if (!w.spots || !w.spots.length) return null;
     var byFile = {};
@@ -714,23 +804,18 @@
     var wrap = el('div', 'spots');
     Object.keys(byFile).forEach(function (k) {
       var g = byFile[k];
-      var head = el('div', 'sp-head');
-      head.appendChild(el('span', 'sp-file', g.file));
-      head.appendChild(el('span', 'sp-sheet', g.sheet));
-      wrap.appendChild(head);
-
-      var cells = el('div', 'sp-cells');
-      g.list.slice(0, SPOT_SHOW).forEach(function (sp) {
-        var c = el('span', 'sp-cell', cellAddr(sp));
-        if (sp.value) c.title = sp.value + (sp.why ? ' — ' + sp.why : '');
-        cells.appendChild(c);
-      });
-      var rest = (w.spotTotal || w.spots.length) - Math.min(g.list.length, SPOT_SHOW);
-      if (g.list.length > SPOT_SHOW || (w.spotTotal || 0) > w.spots.length) {
-        cells.appendChild(el('span', 'sp-more', '+' + Math.max(rest, g.list.length - SPOT_SHOW) + ' ô nữa'));
-      }
-      wrap.appendChild(cells);
+      var group = el('section', 'detail-source');
+      group.appendChild(detailField('File nguồn', g.file, 'source-file'));
+      group.appendChild(detailField('Sheet', g.sheet || 'Chưa xác định', 'source-sheet'));
+      var source = findLoadedFile(g.file);
+      group.appendChild(detailTable({ title: w.level === 'info' ? 'Các ô tool đã xử lý' : 'Các ô cần kiểm tra', spots: true,
+        headers: ['Ô trong file gốc', 'Nội dung ô trong file gốc', 'Tool xử lý / Bạn cần làm'],
+        rows: g.list.map(function (sp) { return [cellAddr(sp) || 'Chưa xác định',
+          P.sourceCellText(source && source.wb, sp.sheet, sp.row, sp.col, sp.value), sp.why || w.message]; }) }));
+      wrap.appendChild(group);
     });
+    if (w.spotTotal > w.spots.length) wrap.appendChild(detailField('Danh sách đã giới hạn',
+      'Đang liệt kê ' + w.spots.length + '/' + w.spotTotal + ' vị trí. Bản tô vàng chỉ đánh dấu các vị trí được liệt kê.', 'impact'));
     return wrap;
   }
 
@@ -739,39 +824,58 @@
    * Người làm sửa thẳng trong đó rồi nạp lại — khỏi tự dò theo số dòng.
    */
   function renderMarkedDownloads(host) {
+    host.innerHTML = '';
     var entries = Pipe.collectSpots([allWarnings()]);
-    if (!entries.length) return;
+    host.classList.toggle('hidden', !entries.length || !state.blocks);
+    if (!entries.length || !state.blocks) return;
 
     var box = el('div', 'marked');
-    box.appendChild(el('div', 'mk-t', 'Tải bản đã đánh dấu để sửa'));
+    box.appendChild(el('h3', 'mk-t', 'Tải file dữ liệu có tô vàng'));
     box.appendChild(el('div', 'mk-d',
-      'Bản copy của chính file bạn nạp vào, ô lỗi được tô vàng và có thêm một sheet ' +
-      'liệt kê từng ô kèm lý do. Sửa xong thì nạp lại file đó vào tool.'));
+      'Tải bản sao có tô vàng để kiểm tra. Sửa đúng dữ liệu rồi nạp lại và bấm Xử lý.'));
+    var help = el('details', 'fold');
+    help.appendChild(el('summary', null, 'File tô vàng gồm những gì?'));
+    help.appendChild(el('div', 'mk-d', 'Giữ nguyên giá trị đầu vào, thêm sheet “Loi can sua” ghi lý do đánh dấu. ' +
+      'Có cả ô đã được chuẩn hóa nên không phải ô vàng nào cũng cần sửa. Đây không phải báo cáo tổng đã xử lý.'));
+    box.appendChild(help);
+    if (allWarnings().some(function (w) { return w.spotTotal > (w.spots || []).length; })) {
+      box.appendChild(el('p', 'mk-d', 'Danh sách vị trí quá dài đã được giới hạn; file tô vàng chỉ đánh dấu các vị trí đã liệt kê.'));
+    }
 
     entries.forEach(function (entry) {
       var src = findLoadedFile(entry.file);
+      var generation = state.blocks;
+      function isCurrent() {
+        return !state.stale && state.blocks === generation &&
+          state.ranSignature === fileSignature() && findLoadedFile(entry.file) === src;
+      }
       var row = el('div', 'mk-row');
       var label = el('span', 'mk-name', entry.file);
-      label.appendChild(el('span', 'mk-count', entry.count + ' ô'));
+      label.appendChild(el('span', 'mk-count', entry.count + ' vị trí được liệt kê'));
       row.appendChild(label);
       if (!src) {
         row.appendChild(el('span', 'mk-miss', 'không còn trong bộ file đang nạp'));
       } else {
-        var btn = el('button', 'sm', 'Tải bản đánh dấu');
+        var btn = el('button', 'marked-download', '↓ Tải file tô vàng');
+        btn.type = 'button';
+        btn.setAttribute('aria-label', 'Tải file tô vàng: ' + entry.file);
+        btn.disabled = !isCurrent();
         btn.addEventListener('click', function () {
+          if (!isCurrent()) { markStale(); return; }
           btn.disabled = true;
           var old = btn.textContent;
           btn.textContent = 'Đang dựng…';
           setTimeout(function () {
+            if (!isCurrent()) { btn.textContent = old; markStale(); return; }
             try {
-              var res = MK.build(src.bytes, entry, {});
+              var res = MK.build(src.bytes, entry, { sourceWb: src.wb });
               W.download(res.bytes, markedName(entry.file));
               btn.textContent = 'Đã tải ✓';
             } catch (e) {
               btn.textContent = old;
               showTopIssue('Không dựng được bản đánh dấu', e.message);
             }
-            setTimeout(function () { btn.textContent = old; btn.disabled = false; }, 1800);
+            setTimeout(function () { btn.textContent = old; btn.disabled = !isCurrent(); }, 1800);
           }, 20);
         });
         row.appendChild(btn);
@@ -797,37 +901,40 @@
   }
 
   function renderIssues() {
-    var all = (state.extraWarnings || []).slice();
-    [state.session, state.ccvn].concat(state.ops).forEach(function (r) {
-      if (r && r.warnings) all = all.concat(r.warnings);
-    });
-    if (state.blocks) all = all.concat(state.blocks.warnings);
+    var all = allWarnings();
 
     var box = $('issues');
     box.innerHTML = '';
+    var notes = $('processing-notes');
+    notes.innerHTML = '';
     var errors = all.filter(function (w) { return w.level === 'error'; });
     var warns = all.filter(function (w) { return w.level === 'warn'; });
     var infos = all.filter(function (w) { return w.level === 'info'; });
 
-    if (!errors.length && !warns.length) {
-      box.appendChild(issueEl('ok', 'Không có vấn đề cần xử lý',
-        'Mọi cột khớp cấu hình, mọi tên supporter tra được email.'));
-    }
+    var hasIssues = errors.length + warns.length > 0;
+    $('warning-panel').classList.toggle('has-errors', !!errors.length);
+    $('warning-panel').classList.toggle('is-clear', !hasIssues);
+    $('warning-icon').textContent = hasIssues ? '!' : '✓';
+    $('warning-title').textContent = hasIssues ? 'Cảnh báo — cần kiểm tra dữ liệu' : 'Kiểm tra dữ liệu';
+    $('warning-summary').textContent = hasIssues
+      ? errors.length + ' lỗi · ' + warns.length + ' cảnh báo cần kiểm tra trước khi dùng báo cáo.'
+      : 'Chưa phát hiện vấn đề. Tool chưa thể xác nhận dữ liệu đã đầy đủ hoặc khớp hoàn toàn bản chuẩn.';
     errors.forEach(function (w) { box.appendChild(issueEl('error', w.message, w.detail, w)); });
 
-    /* cảnh báo nhẹ và ghi chú thì gấp lại, khỏi che mất lỗi thật */
-    function fold(label, list, kind) {
+    /* Cảnh báo luôn mở sẵn; ghi chú xử lý đặt riêng sau nút tải file tô vàng. */
+    function fold(host, label, list, kind, open) {
       if (!list.length) return;
-      var d = el('details', 'fold');
+      var d = el('details', 'fold' + (open ? ' warning-list' : ''));
+      d.open = !!open;
       d.appendChild(el('summary', null, label + ' (' + list.length + ')'));
       list.forEach(function (w) { d.appendChild(issueEl(kind, w.message, w.detail, w)); });
-      box.appendChild(d);
+      host.appendChild(d);
     }
-    fold('Cảnh báo', warns, 'warn');
-    fold('Ghi chú', infos, 'ok');
-    renderMarkedDownloads(box);
+    fold(box, 'Cảnh báo dữ liệu', warns, 'warn', true);
+    renderMarkedDownloads($('marked-downloads'));
+    fold(notes, 'Ghi chú xử lý', infos, 'ok', false);
 
-    if (state.session.droppedRows.length) {
+    if (state.session && state.session.droppedRows.length) {
       var d = el('details', 'fold');
       d.appendChild(el('summary', null,
         'Phiên bị lọc bỏ (' + state.session.droppedRows.length + ')'));
@@ -836,7 +943,7 @@
         list.appendChild(el('div', null, 'Dòng ' + x.excelRow + ' — ' + x.preview));
       });
       d.appendChild(list);
-      box.appendChild(d);
+      notes.appendChild(d);
     }
   }
 
@@ -858,7 +965,11 @@
     var box = $('patch-report');
     box.classList.remove('hidden');
     box.innerHTML = '';
-    if (err) { box.appendChild(issueEl('error', 'Không ghi được vào File báo cáo tổng', err)); return; }
+    if (err) {
+      box.appendChild(issueEl('error', 'Không ghi được vào File báo cáo tổng', err));
+      showTopIssue('Không ghi được vào File báo cáo tổng', err);
+      return;
+    }
     box.appendChild(issueEl('ok', 'Đã tải xong file báo cáo tổng',
       'Mở bằng Excel — pivot tự refresh và công thức tự tính lại, nên lần mở đầu hơi lâu.'));
     var d = el('details', 'fold');
@@ -1091,6 +1202,7 @@
         var checks = ST.compareWithReference(res.bytes, state.files.reference.wb,
           state.blocks, state.cfg,
           { affectedEmails: affected, baseWb: state.files.master.wb,
+            input: { ccvn: state.ccvn, ops: state.ops },
             oddRateEmails: res.oddRateEmails });
         var nFail = checks.filter(function (c) { return c.status === 'fail'; }).length;
         box.appendChild(issueEl(nFail ? 'error' : 'ok',
@@ -1213,6 +1325,20 @@
       setTimeout(function () { rebuild(); busy(false); }, 20);
     });
 
+    $('start-time-source').addEventListener('change', function (e) {
+      /* Giữ các thay đổi JSON chưa lưu trước khi đổi lựa chọn nhanh. */
+      var c2 = readConfigFromEditor();
+      if (!c2) { paintStartTimeSource(); return; }
+      var source = e.target.value;
+      c2.session.stagingColumns[3] = { out: source, from: source };
+      c2.session.startTimeMappingVersion = 3;
+      state.cfg = c2;
+      if (state.blocks) markStale();
+      paintConfigEditor();
+      var saved = saveConfig(state.cfg);
+      cfgStatus((saved ? 'Đã lưu' : 'Chỉ áp dụng trong phiên này') + ' nguồn Start Time. Bấm Xử lý để áp dụng.', saved ? 'ok' : 'err');
+    });
+
     $('btn-redate').addEventListener('click', function () {
       var serial = P.toDateSerial($('report-date').value);
       if (!serial) { showTopIssue('Ngày không hợp lệ', ''); return; }
@@ -1225,11 +1351,14 @@
       var c2 = readConfigFromEditor();
       if (!c2) return;
       state.cfg = c2;
+      paintStartTimeSource();
+      if (state.blocks) markStale();
       var ok = saveConfig(c2);
       cfgStatus(ok ? 'Đã lưu' : 'Trình duyệt chặn lưu — chỉ áp dụng trong phiên này', ok ? 'ok' : 'err');
     });
     $('btn-cfg-reset').addEventListener('click', function () {
       state.cfg = C.defaults();
+      if (state.blocks) markStale();
       paintConfigEditor(); saveConfig(state.cfg);
       $('accept-swapped').checked = !!state.cfg.op.acceptSwappedDates;
       cfgStatus('Đã khôi phục mặc định', 'ok');
@@ -1249,7 +1378,8 @@
       var fr = new FileReader();
       fr.onload = function () {
         try {
-          state.cfg = JSON.parse(fr.result);
+          state.cfg = C.migrate(JSON.parse(fr.result));
+          if (state.blocks) markStale();
           paintConfigEditor(); saveConfig(state.cfg);
           cfgStatus('Đã nhập cấu hình', 'ok');
         } catch (err) { cfgStatus('File JSON không hợp lệ', 'err'); }

@@ -10,9 +10,9 @@
  * dùng lại đúng thuộc tính `s` của ô cũ ở cùng vị trí.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(root.Parse);
-  else root.XlsxPatch = factory(root.Parse);
-})(typeof self !== 'undefined' ? self : this, function (P) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(root.Parse, root.Pipeline);
+  else root.XlsxPatch = factory(root.Parse, root.Pipeline);
+})(typeof self !== 'undefined' ? self : this, function (P, Pipeline) {
   'use strict';
 
   var ROW_RE = /<row\b[^>]*\/>|<row\b[^>]*>[\s\S]*?<\/row>/g;
@@ -150,7 +150,7 @@
       var hasData = idx < dataCount;
 
       /* Dòng trống sẵn, nằm ngoài vùng dữ liệu mới -> giữ nguyên, khỏi dựng lại */
-      if (!hasData && orig && orig.inner.indexOf('<v>') === -1 && orig.inner.indexOf('<f') === -1) {
+      if (!hasData && orig && orig.inner.indexOf('<v>') === -1 && orig.inner.indexOf('<f') === -1 && orig.inner.indexOf('<is>') === -1) {
         out.push(orig.raw);
         continue;
       }
@@ -304,7 +304,9 @@
       cells.sort(function (a, b) { return a.col - b.col; });
       var open = row.raw.slice(0, row.raw.indexOf('>') + 1);
       if (open.slice(-2) === '/>') open = open.slice(0, -2) + '>';
-      xml = xml.replace(row.raw, open + cells.map(function (c) { return c.raw; }).join('') + '</row>');
+      xml = xml.replace(row.raw, function () {
+        return open + cells.map(function (c) { return c.raw; }).join('') + '</row>';
+      });
     });
     if (added) {
       /* dimension phải bao hết dòng vừa thêm, nếu không Excel coi là file hỏng */
@@ -432,6 +434,62 @@
     return out;
   }
 
+  /* Các tổng số lượng/giờ phải cùng tập dòng để tính KPI nhóm bằng team(emails).
+     Chỉ nhận SUM các ô/vùng cùng cột trong sheet hiện tại; không suy đoán công thức lạ. */
+  function teamRowsFromFormulas(formulas, dc) {
+    var columns = ['E', 'F', 'I', 'K', 'L', 'N', 'O', 'Q', 'R', 'T', 'U'];
+    var chosen = null;
+    columns.forEach(function (col) {
+      var f = String(formulas[col] || '').replace(/\s+/g, '').replace(/^=/, '').toUpperCase();
+      var sum = f.match(/^SUM\((.+)\)$/);
+      function invalid() {
+        throw new Error('KPI nhóm: không xác định được phạm vi SUM tại ' + dc.sheet + '!' +
+          col + dc.totalRow + '. Kiểm tra công thức tổng và giới hạn peopleEndRow; tool không tự dùng phạm vi cũ.');
+      }
+      if (!sum) invalid();
+      var seen = {};
+      sum[1].split(/[,;]/).forEach(function (term) {
+        var m = term.match(/^\$?([A-Z]+)\$?(\d+)(?::\$?([A-Z]+)\$?(\d+))?$/);
+        if (!m || m[1] !== col || (m[3] && m[3] !== col)) invalid();
+        var first = +m[2], last = +(m[4] || m[2]);
+        if (first < dc.dataStartRow || last < first || last > (dc.peopleEndRow || dc.dataEndRow)) invalid();
+        for (var r = first; r <= last; r++) {
+          if (r === dc.totalRow || seen[r]) invalid();
+          seen[r] = true;
+        }
+      });
+      var rows = Object.keys(seen).map(Number).sort(function (a, b) { return a - b; });
+      if (chosen && rows.join(',') !== chosen.join(',')) {
+        throw new Error('KPI nhóm: các công thức SUM số lượng và giờ không cùng phạm vi (' +
+          col + dc.totalRow + '). Cần thống nhất công thức trong file nền.');
+      }
+      chosen = rows;
+    });
+    return chosen;
+  }
+
+  /* Số lượng không tìm thấy = 0, không phải chuỗi "" làm E-F / F*1.5 bị #VALUE.
+     Sửa nội dung công thức tại chỗ để giữ nguyên nhóm shared và định dạng ô. */
+  function normalizeKpiCountLookups(xml, dc, report) {
+    var changed = 0;
+    var result = xml.replace(CELL_RE, function (raw) {
+      var addr = getAttr(raw, 'r');
+      if (!addr) return raw;
+      var at = parseAddr(addr);
+      if (at.r < dc.dataStartRow || at.r > (dc.peopleEndRow || dc.dataEndRow) ||
+          [4, 5, 10, 13, 16, 19].indexOf(at.c) === -1) return raw;
+      return raw.replace(/<f\b([^>]*)>([\s\S]*?)<\/f>/, function (tag, attrs, content) {
+        var f = unesc(content);
+        var m = f.match(/^IFERROR\((VLOOKUP\(\$?D\d+,(?:'Sheet5'|Sheet5)![^,]+,\d+,0\)),\s*""\)$/i);
+        if (!m) return tag;
+        changed++;
+        return '<f' + attrs + '>' + esc('IFERROR(' + m[1] + ',0)') + '</f>';
+      });
+    });
+    if (changed) report.push('  ' + dc.sheet + ': ' + changed + ' công thức tra số lượng dùng 0 khi không tìm thấy, không làm mất phần chat khi chưa có case.');
+    return result;
+  }
+
   function patchKpi(files, sheetPart, readText, writeText, blocks, cfg, masterWb, report, info) {
     var kc = cfg.kpi;
     if (!kc || !blocks.kpi) return;
@@ -439,22 +497,71 @@
 
     /* ô ngày của Daily KPI Result do patchDateHeaders lo */
 
-    /* --- danh sách người lấy từ Daily KPI Result ---
-       `opRows` = khối OP, chỉ dùng cho dòng tổng team (đúng vùng của =SUM(E15:E43)).
-       `allRows` = mọi người có dòng KPI, kể cả những người nằm ngoài tổng OP. */
-    var opRows = emailRows(masterWb, kc.daily.sheet, kc.daily.emailColumn,
-      kc.daily.dataStartRow, kc.daily.dataEndRow);
+    /* Đọc công thức thật từ XML (UI có thể parse workbook không giữ cell.f).
+       Tổng OP theo mẫu; KPI cá nhân vẫn ghi cho cả người nằm ngoài tổng OP. */
+    var dailyPart = sheetPart[kc.daily.sheet];
+    if (!dailyPart || !masterWb || !masterWb.Sheets[kc.daily.sheet]) {
+      throw new Error('KPI: thiếu sheet ' + kc.daily.sheet + ' trong file nền');
+    }
+    var dailyXml = readText(dailyPart);
+    var dailyMasters = sharedMasters(dailyXml);
+    var total = rowInner(dailyXml, kc.daily.totalRow), totalFormulas = {};
+    ((total && total.inner.match(CELL_RE)) || []).forEach(function (cell) {
+      var addr = getAttr(cell, 'r');
+      if (addr) totalFormulas[numToCol(parseAddr(addr).c)] = realFormula(cell, kc.daily.totalRow, dailyMasters);
+    });
+    var teamRows = teamRowsFromFormulas(totalFormulas, kc.daily), opEmails = [], seenEmails = {};
+    var dailyWs = masterWb.Sheets[kc.daily.sheet];
+    teamRows.forEach(function (r) {
+      var cell = dailyWs[numToCol(kc.daily.emailColumn) + r];
+      var email = P.normText(cell && cell.v);
+      if (email.indexOf('@') === -1) return;
+      if (seenEmails[email]) throw new Error('KPI nhóm: email bị trùng tại dòng ' + seenEmails[email] + ' và ' + r + ': ' + email);
+      seenEmails[email] = r;
+      opEmails.push(email);
+    });
+    if (info) { info.teamRows = teamRows; info.teamEmails = opEmails; }
+    report.push('  KPI: nhóm OP theo công thức SUM của file nền, dòng ' + teamRows.join(', ') +
+      ' (' + opEmails.length + ' email); không dùng dataEndRow cố định.');
     var allRows = emailRows(masterWb, kc.daily.sheet, kc.daily.emailColumn,
       kc.daily.dataStartRow, kc.daily.peopleEndRow || kc.daily.dataEndRow);
-    var opEmails = Object.keys(opRows);
 
     /* Bỏ những người dùng định mức KPI riêng — tính theo định mức chuẩn sẽ ra số sai */
     var odd = oddRateRows(files, sheetPart, cfg, readText);
+    /* Đọc định mức và cột số lượng của JP từ chính mẫu; không áp định mức OP.
+       Chỉ nhận mẫu công thức đã hiểu, mẫu khác vẫn giữ cảnh báo nhập tay. */
+    function profileFor(row) {
+      var raw = rowInner(dailyXml, row);
+      if (!raw) return null;
+      var cells = {}, matches = raw.inner.match(CELL_RE) || [];
+      matches.forEach(function (cell) { cells[getAttr(cell, 'r')] = cell; });
+      function formula(col) { return realFormula(cells[col + row] || '', row, dailyMasters) || ''; }
+      var profile = { counts: ['H'], rates: [] };
+      var countKeys = {16:'OB',17:'case',18:'CMT',19:'DKM',20:'XL',21:'JP',22:'SETS'};
+      var countCols = ['H','K','N','Q','T'];
+      var rateCols = ['J','M','P','S','V'];
+      for (var i = 0; i < 5; i++) {
+        var rate = formula(rateCols[i]).match(/\*\s*(\d+(?:\.\d+)?)\s*\)/);
+        if (!rate || +rate[1] <= 0) return null;
+        profile.rates.push(+rate[1]);
+        if (!i) continue;
+        var source = formula(countCols[i]).match(/VLOOKUP\(\$D\d+,Sheet5![^,]+,(\d+),0\)/i);
+        if (!source || !countKeys[source[1]]) return null;
+        profile.counts.push(countKeys[source[1]]);
+      }
+      return profile;
+    }
+    var profiles = {};
     var oddEmails = {};
     Object.keys(allRows).forEach(function (e) {
-      if (odd[allRows[e]]) oddEmails[e] = odd[allRows[e]];
+      if (odd[allRows[e]]) {
+        var profile = profileFor(allRows[e]);
+        if (profile) profiles[e] = profile;
+        else oddEmails[e] = odd[allRows[e]];
+      }
     });
     if (info) info.oddRateEmails = oddEmails;
+    writeText(dailyPart, normalizeKpiCountLookups(dailyXml, kc.daily, report));
     if (!opEmails.length) {
       report.push('  KPI: không đọc được danh sách OP từ "' + kc.daily.sheet + '" — bỏ qua sheet KPI tháng');
       return;
@@ -483,7 +590,7 @@
     Object.keys(rowsOf).forEach(function (e) {
       if (!allRows[e]) { skipped.push(e); return; }
       if (oddEmails[e]) { oddSkipped.push(e + ' (' + oddEmails[e] + ')'); return; }
-      var k = blocks.kpi.forEmail(e);
+      var k = blocks.kpi.forEmail(e, profiles[e]);
       /* W = 0 mà người này vẫn có việc trong ngày nghĩa là thiếu giờ làm ở
          "3. Other Tasks" — phải nói ra, nếu không số 0 đó trông như thật. */
       if (k && !k.W && k.hasWork && !k.hours) noHours.push(e);
@@ -770,81 +877,40 @@
     if (!part || !files[part]) { report.push('  ' + sc.sheet + ': không có sheet — bỏ qua'); return; }
 
     var xml = readText(part);
-    var masters = sharedMasters(xml);
-
-    /* Công thức cột phụ ở từng dòng, đã giải shared. */
-    function helperRow(r) {
-      var row = rowInner(xml, r);
-      if (!row) return null;
-      var got = null, cm;
-      CELL_RE.lastIndex = 0;
-      while ((cm = CELL_RE.exec(row.inner)) !== null) {
-        var craw = cm[0];
-        var ct = craw.slice(0, craw.indexOf('>') + 1);
-        var ref = getAttr(ct, 'r');
-        if (!ref) continue;
-        var ci = parseAddr(ref).c;
-        if (sc.columns.indexOf(ci) === -1) continue;
-        var f = realFormula(craw, r, masters);
-        if (!f) continue;
-        (got = got || {})[ci] = { f: f, s: getAttr(ct, 's') };
-      }
-      return got;
+    /* Pivot đổi thứ tự cột khi có kênh mới. Tra theo nhãn đã trim thay vì
+       sao chép D/G/H của hôm trước (04/10: JP khác ở H, XL DKM ở I).
+       B:N là vùng pivot, O:V là vùng phụ, không được tự tham chiếu. */
+    var groups = [
+      ['Outbound'], ['Xử lý case (BO Team)'], ['Trả lời Comment'],
+      ['Đăng ký mới'], ['Xử lý đăng ký mới'], ['JP khác'], ['Setsumekai']
+    ];
+    function channelFormula(row, labels) {
+      return labels.map(function (label) {
+        return 'SUMPRODUCT(--(TRIM($B$4:$N$4)="' + label + '"),B' + row + ':N' + row + ')';
+      }).join('+');
     }
-
-    /* Mẫu = dòng CUỐI đang có công thức, đúng như người ta kéo từ đáy bảng xuống.
-       Lấy dòng đầu sẽ sai: trong file 15/9 dòng 5-9 còn giữ biến thể cũ
-       (O = J-…+I*45) còn dòng 10-33 đã đổi sang O = J-…-I. */
-    var last = 0, tplCells = null;
-    for (var r = sc.templateRow; r <= sc.extendToRow; r++) {
-      var h = helperRow(r);
-      if (h) { last = r; tplCells = h; }
+    function whenPivotRowExists(row, formula) {
+      /* Giữ công thức dự phòng cho pivot nở thêm, nhưng không hiện số 0
+         ở các dòng trống bên dưới Grand Total. Số 0 của người thật vẫn giữ. */
+      return 'IF($A' + row + '="","",' + formula + ')';
     }
-    if (!tplCells) {
-      report.push('  ' + sc.sheet + ': không tìm thấy công thức cột phụ trong dòng ' +
-        sc.templateRow + '-' + sc.extendToRow + ' — bỏ qua');
-      return;
-    }
-
-    /* Cảnh báo nếu các dòng hiện có không cùng một công thức (file gốc đang lệch). */
-    var variants = {};
-    for (var r2 = sc.templateRow; r2 <= last; r2++) {
-      var h2 = helperRow(r2);
-      if (!h2) continue;
-      var key = Object.keys(h2).sort().map(function (k) {
-        return numToCol(Number(k)) + '=' + rebaseFormula(h2[k].f, r2, 0);
-      }).join(' | ');
-      (variants[key] = variants[key] || []).push(r2);
-    }
-    var vKeys = Object.keys(variants);
-    if (vKeys.length > 1) {
-      vKeys.sort(function (a, b) { return variants[b].length - variants[a].length; });
-      report.push('  ⚠ ' + sc.sheet + ': cột phụ đang có ' + vKeys.length +
-        ' kiểu công thức khác nhau — ' + vKeys.map(function (k) {
-          var g = variants[k];
-          return g.length + ' dòng (' + g[0] + '-' + g[g.length - 1] + ')';
-        }).join(', ') + '. Tool kéo theo dòng ' + last +
-        '; nên kiểm tra lại bằng tay các dòng dùng kiểu cũ.');
-    }
-
-    if (last >= sc.extendToRow) {
-      report.push('  ' + sc.sheet + ': cột phụ đã phủ tới dòng ' + last + ' — không cần kéo thêm');
-      return;
-    }
-
     var edits = [];
-    for (var rr = last + 1; rr <= sc.extendToRow; rr++) {
-      Object.keys(tplCells).forEach(function (k) {
-        var ci2 = Number(k);
-        edits.push({ row: rr, col: ci2, value: '', type: 'auto',
-                     formula: rebaseFormula(tplCells[k].f, last, rr), style: tplCells[k].s });
+    for (var rr = sc.templateRow; rr <= sc.extendToRow; rr++) {
+      edits.push({ row: rr, col: 14, value: '', type: 'number',
+        formula: whenPivotRowExists(rr, channelFormula(rr, ['Grand Total']) + '-SUM(P' + rr + ':U' + rr + ')+V' + rr) });
+      groups.forEach(function (labels, i) {
+        var formula = channelFormula(rr, labels);
+        if (i === 6) {
+          var weight = cfg.kpi && typeof cfg.kpi.setsumekaiWeight === 'number' ? cfg.kpi.setsumekaiWeight : 45;
+          formula = '(' + formula + ')*' + weight;
+        }
+        edits.push({ row: rr, col: 15 + i, value: '', type: 'number',
+          formula: whenPivotRowExists(rr, formula) });
       });
     }
     writeText(part, patchCells(xml, edits, { createMissing: true, report: report }));
-    report.push('  ' + sc.sheet + ': kéo công thức cột phụ ' +
-      Object.keys(tplCells).map(function (k) { return numToCol(Number(k)); }).join('/') +
-      ' từ dòng ' + (last + 1) + ' đến ' + sc.extendToRow +
-      ' (mẫu lấy ở dòng ' + last + ') để pivot nở thêm người vẫn có số');
+    report.push('  ' + sc.sheet + ': cập nhật O:V dòng ' + sc.templateRow + '-' + sc.extendToRow +
+      ' theo tên CHANNEL; tự theo đúng kênh khi pivot đổi thứ tự cột.');
   }
 
   /**
@@ -930,6 +996,10 @@
     opts = opts || {};
     if (typeof fflate === 'undefined') throw new Error('Thiếu thư viện fflate');
     var report = [];
+    (blocks.appliedAdjustments || []).forEach(function (a) {
+      report.push('  Điều chỉnh đã xác nhận [' + a.date + '] ' + a.kind + ' ' + a.key +
+        ': ' + a.from + ' → ' + a.to + '; nguồn: ' + a.source);
+    });
     var files = fflate.unzipSync(masterBytes);
     var names = Object.keys(files);
     var originalCount = names.length;
@@ -962,9 +1032,21 @@
       if (nm && rel[id]) sheetPart[nm] = rel[id];
     });
 
+    /* Bảng tra trong XML phải giống bảng Pipeline đã dùng để tính KPI/cache. */
+    var mailEdits = Pipeline.mailSfCorrections(opts.masterWb, cfg);
+    if (mailEdits.length) {
+      var mailPart = sheetPart[cfg.mailSf.sheet];
+      if (!mailPart || !files[mailPart]) throw new Error('Không tìm thấy sheet mail SF để cập nhật tên');
+      writeText(mailPart, patchCells(readText(mailPart), mailEdits));
+      report.push('  mail SF: chuẩn hóa ' + mailEdits.length + ' tên theo email đã biết để VLOOKUP tính lại đúng.');
+    }
+
     /* công thức giữ nguyên như file gốc */
     var fm = (cfg.masterFormulas || {});
     var emailF = fm.sfcaseEmail || "VLOOKUP($F{row},'mail SF'!$C$3:$D$69,2,0)";
+    /* Email chưa tra được phải vẫn trống sau Excel refresh, như Pipeline.
+       Cảnh báo nguồn đã chỉ rõ case thiếu người; không để #N/A lọt vào Pivot. */
+    if (!/^\s*IFERROR\s*\(/i.test(emailF)) emailF = 'IFERROR(' + emailF + ',"")';
     var totalF = fm.otherTotal || 'SUM(G{row}:M{rowEnd})';
     var blockSize = (cfg.op && cfg.op.other && cfg.op.other.blockSize) || 8;
 
@@ -984,10 +1066,7 @@
 
     specs.forEach(function (sp) {
       var b = sp.block;
-      if (!b || !b.rows.length) {
-        report.push('  ' + b.sheet + ': bỏ qua (không có dữ liệu)');
-        return;
-      }
+      if (!b) return;
       var part = sheetPart[b.sheet];
       if (!part || !files[part]) {
         throw new Error('File báo cáo tổng không có sheet "' + b.sheet + '"');
@@ -1076,10 +1155,12 @@
     report.push('  zip: giữ ' + Object.keys(ordered).length + '/' + originalCount + ' part');
     return { bytes: bytes, report: report, partCount: Object.keys(ordered).length,
              oddRateEmails: kpiInfo.oddRateEmails || {},
+             teamRows: kpiInfo.teamRows || [], teamEmails: kpiInfo.teamEmails || [],
              /* dòng fanpage tool THỰC SỰ ghi — phần đối chứng chỉ so những dòng này,
                 vì Follow chỉ có khi người dùng dán số từ extension vào */
              fanpageRows: fanpageRows };
   }
 
-  return { patch: patch, numToCol: numToCol, colToNum: colToNum, parseAddr: parseAddr };
+  return { patch: patch, numToCol: numToCol, colToNum: colToNum, parseAddr: parseAddr,
+           teamRowsFromFormulas: teamRowsFromFormulas };
 });

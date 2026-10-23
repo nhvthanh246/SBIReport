@@ -7,6 +7,37 @@
 
 ---
 
+## Quy chuẩn hiện hành: DataQuyTac (v5)
+
+Bộ `DataQuyTac` được ưu tiên hơn các kết luận lịch sử bên dưới khi có xung đột.
+Đã đối chiếu file thô → file đã xử lý → output ngày 13/09/2026:
+
+- Đổi toàn bộ case Quỳnh → Phương Anh và Quang → Thảo Nguyên; Hoài giữ nguyên.
+- Không tự đổi tên Khánh Ly thành “(3M)”. Giữ bảng nguồn, tra email dòng đầu và
+  cảnh báo tên trùng; cần bảng mã case → email để xác nhận việc chia case.
+- Không bù giờ của Khánh Ly (`ly.ntk1`), Thảo Nguyên hoặc Phương Anh từ output.
+  Bổ sung file OP đúng ngày; KPI đang bằng 0 do thiếu giờ phải được cảnh báo.
+- Số 0 ở cột M — giờ việc khác hiển thị thành ô trống; tổng giờ không thay đổi.
+- Tắt các ngoại lệ riêng ngày 11/10 đã lưu trước đây. Không làm tròn giờ của Cúc.
+
+Các quy tắc đã kiểm chứng không xung đột như First response time, đọc giờ dạng số,
+SUM(G:M), phạm vi tổng team theo công thức mẫu và giữ lịch sử vẫn được sử dụng.
+Chi tiết bằng chứng, kiểm thử và phần chưa khớp: [tool/README.md](tool/README.md).
+
+## Lịch sử quyết định theo bộ 11–12/10/2026 (đã được v5 thay thế phần xung đột)
+
+**Bổ sung sau đối chiếu 12/10:** tắt thêm luật toàn bộ Quang → Nguyên; chuyển giờ
+lưu dạng chữ thành số trước khi cộng; tổng KPI nhóm theo phạm vi SUM trong file nền
+(không cố định dòng 43). Công thức tra số lượng không tìm thấy trả 0, tránh làm mất
+phần chat khi chưa có case. Chi tiết và các khác biệt nguồn còn lại ở đầu README.
+
+Theo yêu cầu ưu tiên dữ liệu mới, các kết luận xung đột bên dưới được thay thế bởi
+quyết định đối chiếu trong [tool/README.md](tool/README.md): nhận ngày/tháng đảo trong OP
+(có cảnh báo và tùy chọn tắt), giữ tên Hoài/Quỳnh thay vì đổi toàn bộ, và tính lại tổng
+giờ F bằng `SUM(G:M)` của khối 8 dòng. Năm case chuyển Quỳnh → Đào và một ô giờ của Cúc
+là **điều chỉnh riêng ngày 11/10**, được cấu hình theo khóa dữ liệu và giá trị nguồn,
+không phải quy tắc phân công/làm tròn áp dụng cho mọi ngày.
+
 ## Các bước
 
 1. Mở file report của ngày hôm trước, định dạng **AltiuslinkVN_Daily Report_(New)-yyyymmdd.xlsx**.
@@ -57,6 +88,14 @@
    Cột **CHANNEL** để toàn bộ là *CHAT BOT*. Đánh số thứ tự cho bảng và ghi ngày hỗ trợ trùng
    ngày viết báo cáo.
 
+   > **Quyết định sau audit tháng 09:** `Start Time` mặc định lấy **First response time**.
+   > Nguồn gốc xác nhận 13/9 (1.555 phiên) và 15/9 (1.997 phiên) dùng cột này;
+   > 14/9 (1.929 phiên) dùng Requested time. Cả file ngày và file tổng hợp giữ sự khác biệt đó.
+   > 27 ngày còn lại chưa có Session gốc nên không khẳng định cột nguồn chỉ từ report.
+   > Muốn tái lập cách làm ngày 14, chọn **Requested time** trong Cấu hình ánh xạ.
+   > Tool giữ lựa chọn đã lưu cho các lần chạy sau, không hardcode ngoại lệ theo ngày.
+   > Ngày báo cáo tự động vẫn nhận theo `First response time`.
+
    > **Sửa: giá trị đúng là `CHAT BOT` (có dấu cách), không phải `CHATBOT`.** Toàn bộ
    > 1.555 / 1.929 / 1.997 dòng chatbot trong 3 file tổng đều ghi `CHAT BOT`. Viết liền
    > sẽ thành một kênh khác trong pivot và làm sai số ở `Summarize_team VietNam`.
@@ -86,14 +125,12 @@
    > nhận được case nào — 22 case bị gán sai người. Từ 14/9 dòng 43 đã đổi thành
    > `NGUYEN THI KHANH LY (3M)` nên hết trùng.
    >
-   > **Hệ quả cho người dùng tool:** tool đọc bảng `mail SF` từ **file tổng bạn nạp vào**.
-   > Nếu Salesforce xuất ra một tên chưa có trong bảng đó (ví dụ `(3M)` vào ngày 14/9 khi
-   > file nền còn là ngày 13), tool sẽ báo **lỗi đỏ**: *"N tên không tra được email"*.
-   > Lúc đó phải **thêm dòng vào tab `mail SF` của file tổng rồi chạy lại** — tool không
-   > tự đoán được email.
+   > **Hiện hành v5:** tool đọc bảng `mail SF` từ **file tổng bạn nạp vào**, không tự
+   > thêm “(3M)” vì bộ DataQuyTac giữ cùng tên cho hai email. Bảng tra lấy dòng đầu
+   > theo VLOOKUP nhưng cảnh báo chưa xác nhận phân công. Cần bổ sung mã case và
+   > email người xử lý, không xóa dòng trùng hoặc tự chia case chỉ để khớp output.
    >
-   > *[TOOL] Không tự sửa (đúng ra không được tự sửa), nhưng luôn soát và cảnh báo:
-   > báo tên trùng trong `mail SF`, và báo tên không tra được email.*
+   > *[TOOL] `mailSf.nameCorrections` mặc định rỗng; cảnh báo tên trùng/chưa tra được.*
 
 10. Chuyển cột **Date** toàn bộ thành ngày báo cáo.
     *[TOOL] Đã tự động.*
@@ -107,7 +144,9 @@
     > **Bổ sung: đọc giá trị đã tính, không đọc công thức.** File tổng chứa
     > `6.1176470588235299` ở chỗ file OP có `=F1952-I1952-J1952-M1959` — tức là paste-values.
     >
-    > *[TOOL] Đã tự động cả hai.*
+    > *[TOOL] Đã tự động cả hai. Riêng tổng giờ F được tính lại theo G:M để không dùng
+    > cache cũ; bộ 11/10 xác nhận F142 là 7.995294117647059 thay vì 8. Không làm tròn
+    > các cột giờ hàng loạt. Ngày đảo trong nguồn được nhận theo tùy chọn và có cảnh báo.*
 
 12. Quay lại file **SBI Daily Report**, sang tab **1. CSKH**, copy toàn bộ vào sheet **1. CSKH**
     của file tổng, **nối tiếp** phần data đã paste từ bước 6.
@@ -137,28 +176,30 @@
     > Bằng chứng: từ 13/9 sang 14/9 pivot nở từ dòng 27 → 33, và có người đã phải kéo
     > tay công thức xuống theo.
     >
-    > **Cảnh báo: công thức cột phụ không nhất quán giữa các ngày.** File 15/9 có dòng
-    > 5–9 dùng `O = J-…+I*45` còn dòng 10–33 dùng `O = J-…-I`. Kéo nhầm biến thể sẽ ra
-    > số sai. Nên kéo từ **dòng cuối cùng** của bảng xuống.
+   > **Cảnh báo: công thức cột phụ không nhất quán giữa các ngày.** File 15/9 có dòng
+   > 5–9 dùng `O = J-…+I*45` còn dòng 10–33 dùng `O = J-…-I`. Không sao chép máy móc
+   > theo vị trí cột vì pivot có thể đổi thứ tự kênh. Tool tra theo nhãn CHANNEL;
+   > hệ số Setsumekai mặc định là 45 theo bản chuẩn 14/9, có thể chỉnh tại
+   > `kpi.setsumekaiWeight`. Công thức O giữ `Grand Total-SUM(P:U)+V` của mẫu.
     >
     > **Trần an toàn: dòng 70.** VLOOKUP của `Daily KPI Result` chỉ tra tới
     > `Sheet5!$A$2:$S$73`, và pivot kế tiếp bắt đầu ở `A74`.
     >
-    > *[TOOL] Đã tự động: kéo sẵn tới dòng 70, lấy mẫu từ dòng cuối còn công thức, và
-    > cảnh báo nếu phát hiện nhiều biến thể công thức trong cùng một bảng.*
+   > *[TOOL] Đã tự động: dựng O:V theo tên kênh tới dòng 70; ô phụ trả trống khi
+   > cột A không có dòng pivot. KPI JavaScript dùng cùng ánh xạ/hệ số với Excel.*
 
 14. Kiểm tra lại các con số tổng cộng màu đỏ ở dưới cùng bảng trong tab **Daily KPI Result**
     đã trùng với kết quả trong **Sheet5** chưa.
     *[TOOL] Chưa tự động — vẫn nên soát mắt. Nhưng xem thêm bước 19 bổ sung bên dưới.*
 
-15. Mở file tổng, tab **2. SF Case Info**, từ cột **Requested By** đổi tên:
+15. Mở file tổng, tab **2. SF Case Info**, kiểm tra **Requested By** và phân công case.
+    Các luật trong flow cũ (chỉ giữ để truy vết, **không áp dụng nguyên bộ**):
     - `Nguyen Thi Thu Hoai` → **TRAN LAN HUONG**
     - `LUU NGOC QUANG` → **NGUYEN THAO NGUYEN**
     - `VU NHU QUYNH` → **NGUYEN PHUONG ANH**
 
     > **Làm rõ tên: export Salesforce ghi `Pham Thi Thu Hoai`, không phải `Nguyen Thi Thu Hoai`.**
-    > Bảng `mail SF` chỉ có một người Hoài duy nhất (`hoai.ptt@altius-link.vn`) nên chắc
-    > chắn là cùng một người.
+    > Không dùng sự khác biệt họ tên này để tự suy đoán danh tính hoặc phân công.
     >
     > **Cảnh báo: thực tế đang làm KHÔNG nhất quán.** Đối chiếu 3 ngày:
     >
@@ -169,12 +210,14 @@
     > | PHAM THI THU HOAI | **0/6 đổi** | 18/18 đổi | **0/10 đổi** |
     >
     > Riêng 15/9: 23 case được đổi đều nằm **trên dòng 325**, 11 case giữ nguyên đều từ
-    > **dòng 334 trở đi** — cắt theo vị trí dòng chứ không theo dữ liệu, tức là sửa tay
-    > rồi bỏ dở giữa chừng.
+    > **dòng 334 trở đi**. Đây là khác biệt theo vị trí dòng, chưa đủ chứng cứ để kết
+    > luận sửa tay bỏ dở hay phân công thực tế.
     >
-    > *[TOOL] Đã tự động và làm đủ 100%, có liệt kê rõ đổi bao nhiêu case cho từng tên.
-    > Khi đối chứng với file cũ, phần lệch do luật này được xếp riêng vào nhóm
-    > "đã truy được nguyên nhân" chứ không tính là lỗi.*
+    > **Quyết định hiện hành theo DataQuyTac:** Quỳnh → Phương Anh (19/19 case),
+    > Quang → Thảo Nguyên (19/19), Hoài giữ nguyên (6/6). Đây là quy chuẩn đang áp
+    > dụng theo yêu cầu ưu tiên bộ mới; khi phân công đổi cần cập nhật luật. Không
+    > suy ra cách chia case từ vị trí dòng. Ngoại lệ Quỳnh → Đào ngày 11/10 đã tắt.
+    > *[TOOL] Sai khác do luật đổi tên vẫn tính là lệch khi đối chiếu, không miễn trừ.*
 
 16. Từ đó quay lại file tổng, tab **Daily KPI Result**, fill số liệu cho các nhân viên,
     đảm bảo nhân viên có tên đều có số liệu, đối chiếu với sheet ẩn **Sheet5**.

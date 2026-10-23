@@ -1,0 +1,526 @@
+{
+  "fullMonthFile": "AltiuslinkVN_Daily Report_(New)-202609_full tháng.xlsx",
+  "fullMonthStartMonths": {
+    "2026-09": 30549,
+    "2026-08": 246,
+    "2026-07": 1
+  },
+  "dailyFiles": 30,
+  "totalChatRows": 52985,
+  "fullMonthMatched": 30796,
+  "reports": [
+    {
+      "day": 1,
+      "rows": 1403,
+      "medianMinutes": 197.85,
+      "overHour": 1042,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 671,
+      "comparisons": 1402,
+      "fullMonth": {
+        "rows": 1403,
+        "matched": 1403,
+        "equalStart": 1403,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 2,
+      "rows": 1524,
+      "medianMinutes": 173.6,
+      "overHour": 1089,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 768,
+      "comparisons": 1523,
+      "fullMonth": {
+        "rows": 1524,
+        "matched": 1524,
+        "equalStart": 1524,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 3,
+      "rows": 1635,
+      "medianMinutes": 157.58333333333334,
+      "overHour": 1194,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 800,
+      "comparisons": 1634,
+      "fullMonth": {
+        "rows": 1635,
+        "matched": 1635,
+        "equalStart": 1635,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 4,
+      "rows": 2281,
+      "medianMinutes": 119.25,
+      "overHour": 1412,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 1026,
+      "comparisons": 2280,
+      "fullMonth": {
+        "rows": 2281,
+        "matched": 2281,
+        "equalStart": 2281,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 5,
+      "rows": 1663,
+      "medianMinutes": 365.3,
+      "overHour": 1401,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 813,
+      "comparisons": 1662,
+      "fullMonth": {
+        "rows": 1663,
+        "matched": 1663,
+        "equalStart": 1663,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 6,
+      "rows": 1695,
+      "medianMinutes": 116.91666666666667,
+      "overHour": 1011,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 743,
+      "comparisons": 1694,
+      "fullMonth": {
+        "rows": 1695,
+        "matched": 1695,
+        "equalStart": 1695,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 7,
+      "rows": 1971,
+      "medianMinutes": 296.1166666666667,
+      "overHour": 1665,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 974,
+      "comparisons": 1970,
+      "fullMonth": {
+        "rows": 1971,
+        "matched": 1971,
+        "equalStart": 1971,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 8,
+      "rows": 2450,
+      "medianMinutes": 162.15,
+      "overHour": 1669,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 1143,
+      "comparisons": 2449,
+      "fullMonth": {
+        "rows": 2450,
+        "matched": 2450,
+        "equalStart": 2450,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 9,
+      "rows": 2618,
+      "medianMinutes": 115.58333333333333,
+      "overHour": 1575,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 1141,
+      "comparisons": 2617,
+      "fullMonth": {
+        "rows": 2618,
+        "matched": 2618,
+        "equalStart": 2618,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 10,
+      "rows": 2301,
+      "medianMinutes": 278.1,
+      "overHour": 1863,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 1112,
+      "comparisons": 2300,
+      "fullMonth": {
+        "rows": 2301,
+        "matched": 2301,
+        "equalStart": 2301,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 11,
+      "rows": 2328,
+      "medianMinutes": 161.61666666666667,
+      "overHour": 1620,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 1056,
+      "comparisons": 2327,
+      "fullMonth": {
+        "rows": 2328,
+        "matched": 2328,
+        "equalStart": 2328,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 12,
+      "rows": 1687,
+      "medianMinutes": 442,
+      "overHour": 1466,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 809,
+      "comparisons": 1686,
+      "fullMonth": {
+        "rows": 1687,
+        "matched": 1687,
+        "equalStart": 1687,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 13,
+      "rows": 1555,
+      "medianMinutes": 115.4,
+      "overHour": 962,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 665,
+      "comparisons": 1554,
+      "fullMonth": {
+        "rows": 1555,
+        "matched": 1555,
+        "equalStart": 1555,
+        "ambiguous": 0
+      },
+      "rawSource": {
+        "sourceRows": 1555,
+        "matched": 1555,
+        "ambiguous": 0,
+        "unmatched": 0,
+        "fields": {
+          "Requested time": 0,
+          "Assign time": 0,
+          "First response time": 1555
+        }
+      }
+    },
+    {
+      "day": 14,
+      "rows": 1929,
+      "medianMinutes": 281.4166666666667,
+      "overHour": 1648,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 935,
+      "comparisons": 1928,
+      "fullMonth": {
+        "rows": 1929,
+        "matched": 1929,
+        "equalStart": 1929,
+        "ambiguous": 0
+      },
+      "rawSource": {
+        "sourceRows": 1929,
+        "matched": 1929,
+        "ambiguous": 0,
+        "unmatched": 0,
+        "fields": {
+          "Requested time": 1929,
+          "Assign time": 747,
+          "First response time": 0
+        }
+      }
+    },
+    {
+      "day": 15,
+      "rows": 1997,
+      "medianMinutes": 138.11666666666667,
+      "overHour": 1288,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 923,
+      "comparisons": 1996,
+      "fullMonth": {
+        "rows": 1997,
+        "matched": 1997,
+        "equalStart": 1997,
+        "ambiguous": 0
+      },
+      "rawSource": {
+        "sourceRows": 1997,
+        "matched": 1997,
+        "ambiguous": 0,
+        "unmatched": 0,
+        "fields": {
+          "Requested time": 0,
+          "Assign time": 0,
+          "First response time": 1997
+        }
+      }
+    },
+    {
+      "day": 16,
+      "rows": 1759,
+      "medianMinutes": 406.43333333333334,
+      "overHour": 1565,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 859,
+      "comparisons": 1758,
+      "fullMonth": {
+        "rows": 1759,
+        "matched": 1759,
+        "equalStart": 1759,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 17,
+      "rows": 2057,
+      "medianMinutes": 141.48333333333332,
+      "overHour": 1328,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 937,
+      "comparisons": 2056,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 18,
+      "rows": 1809,
+      "medianMinutes": 95.21666666666667,
+      "overHour": 1021,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 800,
+      "comparisons": 1808,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 19,
+      "rows": 1145,
+      "medianMinutes": 215.51666666666668,
+      "overHour": 842,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 564,
+      "comparisons": 1144,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 20,
+      "rows": 1274,
+      "medianMinutes": 223.81666666666666,
+      "overHour": 942,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 609,
+      "comparisons": 1273,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 21,
+      "rows": 1197,
+      "medianMinutes": 106.23333333333333,
+      "overHour": 728,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 529,
+      "comparisons": 1196,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 22,
+      "rows": 1334,
+      "medianMinutes": 89.6,
+      "overHour": 752,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 599,
+      "comparisons": 1333,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 23,
+      "rows": 1487,
+      "medianMinutes": 127.5,
+      "overHour": 957,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 665,
+      "comparisons": 1486,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 24,
+      "rows": 1650,
+      "medianMinutes": 222.06666666666666,
+      "overHour": 1236,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 788,
+      "comparisons": 1649,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 25,
+      "rows": 1771,
+      "medianMinutes": 102.28333333333333,
+      "overHour": 1023,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 772,
+      "comparisons": 1770,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 26,
+      "rows": 1573,
+      "medianMinutes": 175.83333333333334,
+      "overHour": 1151,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 778,
+      "comparisons": 1572,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 27,
+      "rows": 1449,
+      "medianMinutes": 225.25,
+      "overHour": 1064,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 695,
+      "comparisons": 1448,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 28,
+      "rows": 1683,
+      "medianMinutes": 101.25,
+      "overHour": 1003,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 733,
+      "comparisons": 1682,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 29,
+      "rows": 1727,
+      "medianMinutes": 186.98333333333332,
+      "overHour": 1308,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 837,
+      "comparisons": 1726,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    },
+    {
+      "day": 30,
+      "rows": 2033,
+      "medianMinutes": 159.05,
+      "overHour": 1549,
+      "negative": 0,
+      "invalid": 0,
+      "increasing": 1025,
+      "comparisons": 2032,
+      "fullMonth": {
+        "rows": 0,
+        "matched": 0,
+        "equalStart": 0,
+        "ambiguous": 0
+      }
+    }
+  ]
+}

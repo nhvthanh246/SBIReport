@@ -61,11 +61,40 @@
              body + add + '</cellXfs>';
     });
     if (xfId === null) return null;
-    return { xml: xml, xfId: xfId };
+    return { xml: xml, xfId: xfId, fillId: fillId };
+  }
+
+  /* Mỗi ô tô vàng giữ định dạng ngày/số, font, viền, căn lề và bảo vệ cũ.
+     Dùng một style General cho tất cả sẽ biến ngày hiển thị thành số 46xxx. */
+  function highlightVariants(xml, fillId) {
+    var group = xml.match(/<cellXfs\b([^>]*)>([\s\S]*?)<\/cellXfs>/);
+    var originals = group[2].match(/<xf\b[^>]*\/>|<xf\b[^>]*>[\s\S]*?<\/xf>/g) || [];
+    var added = [], mapped = {};
+    return {
+      forStyle: function (oldId) {
+        if (mapped[oldId] !== undefined) return mapped[oldId];
+        var base = originals[oldId] || originals[0];
+        var clone = base.replace(/<xf\b[^>]*>/, function (head) {
+          function set(name, value) {
+            var re = new RegExp('\\s' + name + '="[^"]*"');
+            head = re.test(head) ? head.replace(re, ' ' + name + '="' + value + '"')
+              : head.replace(/\/?>(?=$)/, function (end) { return ' ' + name + '="' + value + '"' + end; });
+          }
+          set('fillId', fillId); set('applyFill', 1); return head;
+        });
+        mapped[oldId] = originals.length + added.length;
+        added.push(clone);
+        return mapped[oldId];
+      },
+      xml: function () {
+        return xml.replace(group[0], '<cellXfs' + group[1].replace(/\s*count="\d+"/, '') +
+          ' count="' + (originals.length + added.length) + '">' + group[2] + added.join('') + '</cellXfs>');
+      }
+    };
   }
 
   /* ---------- đổi thuộc tính `s` của các ô cần đánh dấu ---------- */
-  function paintCells(xml, byRow, xfId) {
+  function paintCells(xml, byRow, styleFor) {
     var ROW_RE = /<row\b[^>]*\/>|<row\b[^>]*>[\s\S]*?<\/row>/g;
     var CELL_RE = /<c\b[^>]*\/>|<c\b[^>]*>[\s\S]*?<\/c>/g;
     var painted = 0;
@@ -87,6 +116,7 @@
         ci -= 1;
         if (want.indexOf(ci) === -1) return cellXml;
         painted++;
+        var xfId = styleFor(parseInt(getAttr(ch, 's') || '0', 10));
         var nh = /\ss="\d+"/.test(ch)
           ? ch.replace(/\ss="\d+"/, ' s="' + xfId + '"')
           : (ch.slice(-2) === '/>' ? ch.slice(0, -2) + ' s="' + xfId + '"/>'
@@ -98,7 +128,7 @@
   }
 
   /* ---------- sheet liệt kê lỗi ---------- */
-  function issueSheetXml(fileEntry, headerXfId) {
+  function issueSheetXml(fileEntry, headerXfId, sourceWb) {
     var rows = [], r = 1;
     function cell(col, row, text, xf) {
       return '<c r="' + numToCol(col) + row + '"' + (xf !== null && xf !== undefined ? ' s="' + xf + '"' : '') +
@@ -110,22 +140,24 @@
       r++;
     }
 
-    line(['Các ô cần sửa trong file: ' + fileEntry.file], headerXfId);
-    line(['Sửa xong thì lưu file và nạp lại vào tool. Màu vàng chỉ để đánh dấu, không ảnh hưởng xử lý.'], null);
+    line(['Các ô được đánh dấu trong file: ' + fileEntry.file], headerXfId);
+    line(['Nội dung ô được hiển thị theo định dạng trong file gốc. Màu vàng không có nghĩa là ô nào cũng sai; xem cột Trạng thái trước khi sửa.'], null);
     line([''], null);
-    line(['Sheet', 'Ô', 'Dòng', 'Giá trị hiện tại', 'Vấn đề', 'Cần làm gì'], headerXfId);
+    line(['Sheet trong file gốc', 'Ô', 'Dòng', 'Nội dung ô trong file gốc', 'Trạng thái', 'Vì sao được đánh dấu', 'Tool xử lý / Bạn cần làm'], headerXfId);
 
     Object.keys(fileEntry.sheets).forEach(function (sheetName) {
       fileEntry.sheets[sheetName].forEach(function (sp) {
         var addr = (sp.col === null || sp.col === undefined || !sp.row) ? '' : numToCol(sp.col) + sp.row;
-        line([sheetName, addr, sp.row ? String(sp.row) : '', sp.value, sp.message, sp.why], null);
+        var shown = P.sourceCellText(sourceWb, sheetName, sp.row, sp.col, sp.value);
+        line([sheetName, addr, sp.row ? String(sp.row) : '', shown === '' ? '(trống)' : shown,
+          sp.level === 'info' ? 'Đã xử lý — xem ghi chú' : 'Cần kiểm tra', sp.message, sp.why], null);
       });
     });
 
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
       '<sheetPr><tabColor rgb="FFFFC000"/></sheetPr>' +
-      '<dimension ref="A1:F' + Math.max(1, r - 1) + '"/>' +
+      '<dimension ref="A1:G' + Math.max(1, r - 1) + '"/>' +
       '<sheetViews><sheetView workbookViewId="0"/></sheetViews>' +
       '<sheetFormatPr defaultRowHeight="15"/>' +
       '<cols>' +
@@ -133,8 +165,9 @@
       '<col min="2" max="2" width="8" customWidth="1"/>' +
       '<col min="3" max="3" width="8" customWidth="1"/>' +
       '<col min="4" max="4" width="30" customWidth="1"/>' +
-      '<col min="5" max="5" width="52" customWidth="1"/>' +
-      '<col min="6" max="6" width="70" customWidth="1"/>' +
+      '<col min="5" max="5" width="28" customWidth="1"/>' +
+      '<col min="6" max="6" width="52" customWidth="1"/>' +
+      '<col min="7" max="7" width="70" customWidth="1"/>' +
       '</cols>' +
       '<sheetData>' + rows.join('') + '</sheetData></worksheet>';
   }
@@ -154,14 +187,15 @@
     function writeText(n, s) { files[n] = fflate.strToU8(s); }
 
     /* --- 1. hai style: vàng nhạt cho ô lỗi, vàng đậm cho dòng tiêu đề --- */
-    var xfId = null, headerXfId = null;
+    var xfId = null, headerXfId = null, variants = null;
     if (files['xl/styles.xml']) {
       var a = addHighlightStyle(readText('xl/styles.xml'), opts.argb || 'FFFFF2A8');
       if (a) {
         var b = addHighlightStyle(a.xml, 'FFFFD966');
         xfId = a.xfId;
         headerXfId = b ? b.xfId : a.xfId;
-        writeText('xl/styles.xml', b ? b.xml : a.xml);
+        variants = highlightVariants(b ? b.xml : a.xml, a.fillId);
+        writeText('xl/styles.xml', variants.xml());
       }
     }
     if (xfId === null) report.push('Không thêm được màu đánh dấu — chỉ kèm sheet liệt kê.');
@@ -195,11 +229,12 @@
           (byRow[sp.row] = byRow[sp.row] || []).push(sp.col);
         });
         if (!Object.keys(byRow).length) return;
-        var res = paintCells(readText(part), byRow, xfId);
+        var res = paintCells(readText(part), byRow, variants.forStyle);
         writeText(part, res.xml);
         painted += res.painted;
       });
     }
+    if (variants) writeText('xl/styles.xml', variants.xml());
     if (missSheets.length) report.push('Không tìm thấy sheet: ' + missSheets.join(', '));
 
     /* --- 4. thêm sheet liệt kê vào ĐẦU workbook --- */
@@ -214,7 +249,10 @@
     guard = 0;
     while (sheetPart[title] && guard++ < 50) title = SHEET_TITLE + ' ' + guard;
 
-    writeText(newPart, issueSheetXml(fileEntry, headerXfId));
+    var sourceWb = opts.sourceWb || XLSX.read(bytes, {
+      type: 'array', cellDates: false, cellNF: true, cellText: false, cellFormula: false, cellHTML: false
+    });
+    writeText(newPart, issueSheetXml(fileEntry, headerXfId, sourceWb));
     writeText('xl/_rels/workbook.xml.rels', relsXml.replace('</Relationships>',
       '<Relationship Id="' + newRid + '" Type="http://schemas.openxmlformats.org/' +
       'officeDocument/2006/relationships/worksheet" Target="worksheets/' +

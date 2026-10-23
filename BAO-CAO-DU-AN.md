@@ -1,361 +1,211 @@
-# Dự án tự động hoá Báo cáo ngày CCVN — Báo cáo tình trạng
+# BÁO CÁO DỰ ÁN TOOL TỰ ĐỘNG HÓA BÁO CÁO EXCEL
 
-*Cập nhật: 25/09/2026. Viết cho quản lý, không dùng thuật ngữ kỹ thuật.*
-*Bản này thay thế báo cáo ngày 18/09.*
+**Dự án:** Tool báo cáo ngày CCVN / Altius Link VN  
+**Ngày cập nhật:** 14/10/2026  
+**Phạm vi:** Tổng hợp công việc đã thực hiện, kết quả kiểm chứng và các vấn đề cần tiếp tục xử lý.
 
----
+## 1. Tổng quan
 
-## Tóm tắt trong một phút
+Tôi đã xây dựng tool hỗ trợ tự động hóa quy trình lập báo cáo Excel hằng ngày, từ khâu đọc và làm sạch dữ liệu đến tổng hợp, tính KPI và xuất file báo cáo theo mẫu có sẵn.
 
-Công cụ làm báo cáo ngày cho khách hàng SBI **đã chạy được và đã kiểm chứng xong**.
-So với báo cáo lần trước, ba thay đổi lớn:
+Ngoài việc phát triển chức năng, tôi đã kiểm tra kết quả trên các bộ dữ liệu thực tế, xử lý những lỗi phát sinh và đối chiếu báo cáo của cả tháng 09 để đánh giá khả năng áp dụng tổng quát. Quá trình này giúp phân biệt lỗi của tool với những chênh lệch do dữ liệu đầu vào thiếu, khác thời điểm chốt hoặc quy tắc nghiệp vụ chưa thống nhất.
 
-1. **Kiểm chứng chặt hơn nhiều.** Lần trước kiểm trên một ngày. Lần này chạy thử
-   **ba ngày liên tiếp** (13 → 14 → 15/9), mô phỏng đúng cách dùng thật: báo cáo
-   hôm nay dựng trên file của hôm qua. Đã so **122.957 ô**.
+**Trạng thái hiện tại:** Đã có tool chạy được, bộ kiểm thử và tài liệu sử dụng. Một số quy tắc nghiệp vụ và dữ liệu nguồn vẫn cần hoàn thiện; chưa thể kết luận tool khớp 100% mọi báo cáo mẫu hoặc thay thế toàn bộ bước kiểm tra của người làm báo cáo.
 
-2. **Phát hiện một lỗi nghiêm trọng suýt lọt ra khách hàng.** File xuất ra nhìn
-   đúng trên mọi con số, nhưng khi mở bằng Excel thật thì **toàn bộ bảng KPI ngày
-   ra số 0**. Đã tìm ra nguyên nhân và sửa. Chi tiết ở mục riêng bên dưới.
+## 2. Mục tiêu thực hiện
 
-3. **Máy làm thay được nhiều hơn.** Bảng tổng hợp tăng từ 8 lên **22 chỉ tiêu**
-   tự điền; bảng KPI tháng từ 29 lên **37 người**; sheet `Summarize` trước đây
-   trắng gần hết thì nay tự có số.
+- Giảm thao tác copy/paste giữa nhiều file Excel.
+- Tự động lọc, chuẩn hóa và đưa dữ liệu vào đúng sheet, đúng cột.
+- Hạn chế mất dữ liệu, sai mã khách hàng, thiếu giờ làm và sai ánh xạ người phụ trách.
+- Giữ cấu trúc, định dạng, công thức và PivotTable của file báo cáo tổng.
+- Bảo toàn dữ liệu lịch sử khi lập báo cáo cho ngày mới.
+- Có công cụ đối chiếu để phát hiện và giải thích các ô không khớp.
+- Xử lý file Excel trên máy người dùng, không cần tải workbook lên máy chủ.
 
-**Trạng thái:** sẵn sàng dùng hằng ngày. Đã có tài liệu hướng dẫn cho người làm.
+## 3. Những công việc đã thực hiện
 
----
+### 3.1. Phân tích quy trình và dữ liệu đầu vào
 
-## Tình trạng từng phần
+Tôi đã đọc, rà soát và cập nhật quy trình trong [flow.md](flow.md), xác định các nhóm dữ liệu cần dùng:
 
-| Phần việc | Trạng thái | Ghi chú |
-|---|---|---|
-| Gộp và dán 3 bảng dữ liệu chính | Xong | Hơn 2.700 dòng mỗi ngày, không còn copy-paste tay |
-| Bảng tổng hợp `Summarize_team VietNam` | 22 chỉ tiêu + 6 dòng fanpage | 27 dòng còn lại không có trong dữ liệu đầu vào |
-| Sheet `Summarize` | Xong | Tự rút số từ bảng trên |
-| Bảng KPI tháng | Xong | 37 người + dòng tổng team |
-| Bảng KPI ngày | Xong | Tự tính lại toàn bộ chuỗi công thức |
-| Ngày tháng ở đầu các tab | Xong | 6 vị trí |
-| Cảnh báo dữ liệu bất thường | Xong | 9 loại, chỉ rõ tệp/dòng/ô |
-| Tải bản Excel đã đánh dấu để sửa | Xong | Tô vàng ô lỗi + sheet liệt kê |
-| Số like/follow fanpage | Xong | Nối với extension Chrome lấy số follow |
-| Tài liệu hướng dẫn người dùng | Xong | `HUONG-DAN-SU-DUNG.md` |
-| Chạy thử trong công việc thật | **Chưa** | Đề xuất chạy song song 1 tuần |
-
----
-
-## Luồng làm việc
-
-Sơ đồ dưới đây cho thấy công cụ nằm ở đâu trong quy trình, và **chỗ nào con người
-vẫn phải làm**. Nét liền là luồng chính; nét đứt là nhánh cảnh báo, chỉ xuất hiện
-khi dữ liệu đầu vào có vấn đề.
-
-```mermaid
-flowchart TD
-    A1["<b>Session Report</b><br/>phiên chat bot<br/>1.600 – 2.000 dòng/ngày"]
-    A2["<b>Daily Report CCVN</b><br/>case Salesforce<br/>380 – 550 dòng/ngày"]
-    A3["<b>SBI Daily Report</b><br/>giờ làm nhân viên<br/>file dùng chung"]
-    A4["<b>Báo cáo tổng HÔM QUA</b><br/>nền để cộng dồn cả tháng"]
-    A5["<b>Extension Chrome</b><br/>số follow 3 fanpage<br/>tự đưa sang tool"]
-
-    A1 --> T
-    A2 --> T
-    A3 --> T
-    A4 --> T
-    A5 --> T
-
-    T["<b>CÔNG CỤ</b><br/>chạy trong trình duyệt, không qua mạng<br/> <br/>lọc dòng rác → gộp 3 nguồn → tra email<br/>→ tính 22 chỉ tiêu, 6 dòng fanpage và KPI 37 người<br/>→ ghi vào file, giữ nguyên pivot và công thức"]
-
-    T --> OUT["<b>Báo cáo tổng HÔM NAY</b><br/>3 bảng dữ liệu, 22 chỉ tiêu tổng hợp,<br/>KPI ngày và KPI tháng đã điền"]
-    T -.-> W["<b>Cảnh báo</b><br/>9 loại, nêu rõ cách xử lý"]
-
-    OUT --> M1["<b>Mở bằng Excel một lần</b><br/>bắt buộc — để Excel tính lại<br/>công thức và làm mới pivot"]
-    W -.-> M2["Xử lý cảnh báo đỏ<br/>vd: bổ sung tên vào bảng email"]
-    M2 -.-> M1
-
-    M1 --> M3["<b>Nhập tay 27 dòng</b><br/>tồn đọng Salesforce · nhân sự<br/>ý kiến khách hàng"]
-    M3 --> M4["Soát theo checklist<br/>trong tài liệu hướng dẫn"]
-    M4 --> S(["<b>Gửi khách hàng SBI</b>"])
-
-    classDef src fill:#eef2f7,stroke:#8aa0b8,stroke-width:1px,color:#16243a
-    classDef tool fill:#16243a,stroke:#16243a,color:#ffffff
-    classDef out fill:#e4f0ef,stroke:#1f6f6b,stroke-width:2px,color:#16243a
-    classDef human fill:#fdf0e3,stroke:#c25e00,stroke-width:1px,color:#16243a
-    classDef warn fill:#fbe9e0,stroke:#c25e00,stroke-width:1px,color:#16243a
-    classDef done fill:#1f6f6b,stroke:#1f6f6b,color:#ffffff
-
-    class A1,A2,A3,A4,A5 src
-    class T tool
-    class OUT out
-    class W warn
-    class M1,M2,M3,M4 human
-    class S done
-```
-
-**Đọc sơ đồ này nên chú ý ba điểm:**
-
-1. **Ô xanh đậm là phần máy làm.** Toàn bộ việc gộp và dán hơn 2.700 dòng mỗi ngày
-   nằm gọn trong đó — và đây cũng là phần dễ sai nhất của cách làm cũ.
-2. **Bốn ô cam là phần người vẫn phải làm**, không bỏ được. Trong đó bước *"Mở bằng
-   Excel một lần"* là bắt buộc: bỏ qua thì file giao đi sẽ thiếu số ở bảng KPI.
-3. **Báo cáo hôm nay dựng trên file hôm qua.** Đây là lý do không thể tạo file mới
-   từ đầu: số liệu cộng dồn cả tháng nằm trong chính file đó. Cũng vì vậy, nếu một
-   ngày làm sai thì các ngày sau kế thừa cái sai — nên bước soát cuối rất quan trọng.
-
----
-
-## Một lỗi nghiêm trọng suýt lọt
-
-Đây là phần đáng chú ý nhất của giai đoạn này, và nó nói lên một điều quan trọng
-về cách kiểm thử.
-
-**Chuyện gì xảy ra:** file báo cáo tổng có một bộ lọc ẩn theo ngày. Bộ lọc này
-được người dùng tick tay từng ngày một. Mỗi lần công cụ nạp dữ liệu của một ngày
-mới vào, **ngày đó chưa có trong danh sách tick**, nên Excel coi như không được
-chọn và **lọc sạch toàn bộ dữ liệu**.
-
-**Hậu quả nếu không phát hiện:** bảng tổng hợp tự động rỗng, kéo theo toàn bộ bảng
-**KPI ngày ra số 0** cho tất cả nhân viên. Báo cáo gửi khách hàng sẽ có một sheet
-trắng trong khi mọi số liệu thô bên trong vẫn hoàn toàn đúng.
-
-**Vì sao bộ kiểm tra tự động không bắt được:** nó so sánh từng ô dữ liệu, mà mọi
-ô dữ liệu đều đúng. Lỗi chỉ hiện ra khi **mở file bằng Excel thật** và để Excel
-tính lại.
-
-**Bài học đã áp dụng:** từ nay mỗi lần kiểm chứng đều bắt buộc mở file bằng Excel
-thật, và đã thêm một chốt chặn tự động để lỗi này không tái phát âm thầm.
-
-> Đây cũng là lý do mục "Mở bằng Excel một lần trước khi gửi" được đưa vào tài
-> liệu hướng dẫn như một bước bắt buộc.
-
----
-
-## Đã làm thêm gì từ báo cáo lần trước
-
-### Đối chiếu với quy trình nghiệp vụ
-
-Bộ phận nghiệp vụ đã cung cấp bản mô tả quy trình 19 bước. Chúng tôi đối chiếu
-từng bước với dữ liệu thật:
-
-- **3 bước công cụ đang thiếu** đã được bổ sung: điền ngày ở đầu các tab, kéo công
-  thức bảng phụ, và một quy tắc đổi tên người lập case.
-- **2 chỗ bản mô tả ghi sai** đã đính chính và gửi lại: một cột được ghi là "bỏ
-  đi" nhưng thực tế đang dùng, và một giá trị bị ghi sai chính tả.
-
-Bản quy trình đã được viết lại đầy đủ, kèm bằng chứng cho từng chỗ sửa.
-
-### Tự động hoá thêm
-
-| Hạng mục | Trước | Nay |
-|---|---|---|
-| Chỉ tiêu bảng tổng hợp | 8 | **22** |
-| Số người có KPI tháng | 29 | **37** |
-| Sheet `Summarize` | Trắng gần hết | Tự điền |
-
-Riêng khối **"Nội dung hỗ trợ"** (13 dòng) và **số lượng comment** trước đây gõ
-tay, nay máy đếm tự động. Đã đối chiếu **39/39 ô khớp chính xác** trên cả ba ngày.
-
-### Nối với extension lấy số fanpage
-
-Bộ phận đã làm một extension Chrome tự đọc số **follow** của 3 fanpage (SBIR, SMILES,
-DCOM). Công cụ nay nối thẳng với extension: bấm một nút trong tool, extension đi lấy
-số rồi trả về, 3 dòng follow điền tự động — không phải copy-paste.
-
-Công cụ vẫn không tự đọc Facebook, và không thể: trình duyệt chặn trang web đọc dữ
-liệu từ tên miền khác, Facebook lại hiển thị số bằng JavaScript và đòi phiên đăng
-nhập. Chỉ extension mới mở được tab thật để lấy số. Việc nối hai bên giữ nguyên
-nguyên tắc **dữ liệu khách hàng không rời khỏi máy** — tool vẫn không gọi ra mạng.
-
-Riêng số **like**, phía SBI xác nhận chỉ cần ước lượng theo các ngày trước. Đối chiếu
-dữ liệu thật thì 3 số này **giữ nguyên suốt cả tháng** — tức người làm vẫn đang chép
-lại của hôm trước. Công cụ làm đúng như vậy, và cảnh báo nếu giá trị vừa đổi.
-
-Chính luật cảnh báo đó phát hiện ngay một lỗi: fanpage DCOM có số like là `311k` suốt
-từ đầu tháng, nhưng từ ngày 14/9 bị gõ thành **`3111k`** — thừa một số 1, thành 3,1
-triệu like cho một trang chỉ có 393 nghìn người theo dõi. Lỗi này đã lan sang ngày 15.
-
-### Giao diện dễ dùng hơn theo góp ý của người dùng
-
-Hai điểm người dùng phản hồi, đã sửa xong:
-
-**Nạp file một lượt.** Trước đây có bốn ô riêng, phải chọn đúng loại cho từng ô. Giờ
-chỉ một vùng kéo thả: đổ tất cả file vào, tool tự phân loại, và một dòng ngay dưới cho
-biết còn thiếu nhóm nào.
-
-**Chỉ đúng chỗ lỗi.** Trước đây cảnh báo chỉ ghi kiểu "dòng 43" hoặc "không tra được
-email" — người làm không biết lỗi ở tệp nào. Giờ mỗi cảnh báo nêu rõ **tệp, sheet và
-từng ô** (ví dụ `Daily Report CCVN-14.09.xlsx › G104, G107, G133`).
-
-Thêm nữa, mỗi tệp có lỗi đều có nút **tải bản đã đánh dấu**: một bản copy của chính
-tệp đó, ô lỗi tô vàng, kèm một sheet liệt kê từng ô và cách sửa. Người làm sửa ngay
-trong đó rồi nạp lại. Nếu đó là bản của File báo cáo tổng, tool tự gỡ sheet liệt kê
-khi dùng làm file nền, nên không lọt vào báo cáo gửi khách hàng.
-
-### Phát hiện thêm lỗi dữ liệu
-
-Ngoài ba lỗi đã báo cáo lần trước, giai đoạn này tìm thêm bốn:
-
-| Phát hiện | Ảnh hưởng |
+| Nhóm dữ liệu | Vai trò |
 |---|---|
-| Bảng tra email thiếu một tên mới từ Salesforce | 18 case/ngày thiếu email, KPI người đó bằng 0 |
-| Cột TEAM trong file nhân viên có 16 ô gõ nhầm ký tự | Rác lọt vào báo cáo gửi khách |
-| File báo cáo của nhân viên thiếu 4–7 người mỗi ngày | Những người này bị KPI bằng 0 |
-| Một nhân viên dùng định mức KPI khác mọi người | Nếu tính theo định mức chung sẽ sai gần 3 lần |
-| Số like fanpage DCOM bị gõ thừa một chữ số | `3111k` thay vì `311k`, từ ngày 14/9 |
+| Báo cáo tổng ngày trước | File nền để lập báo cáo ngày mới và giữ lịch sử |
+| Session Report | Dữ liệu phiên chatbot từ Live Support |
+| Daily Report CCVN | Dữ liệu case xuất từ Salesforce |
+| Báo cáo ngày của nhân viên — file OP | Dữ liệu CSKH, hoạt động khác và giờ làm |
 
-Công cụ nay **cảnh báo đích danh** từng trường hợp thay vì âm thầm cho ra số 0.
+Tôi cũng đã đối chiếu dữ liệu gốc, báo cáo mẫu và các ảnh phản ánh sai lệch để xác định vị trí lỗi, thay vì chỉ kiểm tra số tổng cuối cùng.
 
----
+### 3.2. Xây dựng giao diện và luồng sử dụng
 
-## Còn gì phải làm tay
+- Xây dựng giao diện web bằng HTML, CSS và JavaScript, có thể mở từ `tool/index.html`.
+- Cho phép kéo thả nhiều file, tự nhận diện loại file và thông báo nhóm dữ liệu còn thiếu.
+- Hỗ trợ nạp nhiều file OP để tổng hợp dữ liệu.
+- Hiển thị ngày báo cáo, số dòng đã xử lý, dữ liệu xem trước và cảnh báo.
+- Cho phép xuất báo cáo tổng hoặc xuất riêng các khối dữ liệu để dán thủ công.
+- Bổ sung cấu hình ánh xạ, bảng đổi tên người lập case và chức năng nhập/xuất cấu hình JSON.
+- Khóa kết quả cũ khi thay file hoặc thay cấu hình cần xử lý lại, tránh tải nhầm báo cáo chưa cập nhật.
 
-Nói thẳng để tránh kỳ vọng sai: **công cụ chưa tự động hoá 100%, và không thể**,
-vì những số dưới đây không nằm trong các nguồn dữ liệu mà công cụ đọc được.
+### 3.3. Tự động làm sạch và chuẩn hóa dữ liệu
 
-| Nhóm | Số dòng | Nguồn thật |
-|---|---|---|
-| Tồn đọng Salesforce | 9 | 4 báo cáo Salesforce khác |
-| Đăng ký mới | 3 | Báo cáo đăng ký |
-| Ý kiến khách hàng | 6 | Đọc và phân loại tay |
-| Nhân sự (Head Count) | 2 | Người quyết định |
-| Chi tiết Outbound | 3 | Khi có phát sinh |
-| Khung giờ, số OP, claim, Others | 4 | Số tự khai |
+- Lọc các phiên có mô tả thuộc nhóm “lỗi bot” theo cấu hình.
+- Chuẩn hóa ngày tháng, xử lý dữ liệu ngày ở dạng serial Excel và dạng chuỗi.
+- Phát hiện ngày/tháng bị đảo và cho người dùng lựa chọn có nhận các dòng đó hay không.
+- Loại dòng chỉ có ngày nhưng không có nội dung nghiệp vụ.
+- Giữ mã khách hàng, sender ID dài và chuỗi thời gian ở kiểu dữ liệu phù hợp, tránh mất chữ số khi Excel chuyển thành số.
+- Chuẩn hóa tên người lập case trước khi tra email, xử lý ký tự thừa ở cuối tên.
+- Đọc bảng `mail SF` từ file nền, phát hiện tên trùng và tên chưa tra được email.
 
-Công cụ **liệt kê đủ danh sách này mỗi lần chạy** để không ai quên.
+### 3.4. Xây dựng các khối dữ liệu đầu ra
 
-Ba chỉ tiêu trong đó (Others, khung giờ, số lượng OP) chúng tôi **đã thử suy ra
-từ dữ liệu nhưng không khớp**, và đã ghi lại lý do để lần sau khỏi mất công thử lại.
+Tool đã tự động dựng ba khối chính:
 
----
-
-## Làm sao biết công cụ chạy đúng
-
-### Chạy thử theo chuỗi ba ngày
-
-Cách kiểm chứng mạnh nhất: lấy dữ liệu thật ba ngày liên tiếp, cho công cụ dựng
-lại báo cáo ngày 14 từ file ngày 13, rồi ngày 15 từ file ngày 14 — đúng như cách
-dùng thật — và so từng ô với bản mà team đã làm tay.
-
-| Ngày | Số ô đã so |
+| Sheet đích | Nội dung xử lý |
 |---|---|
-| 13/9 | 35.837 |
-| 14/9 | 42.166 |
-| 15/9 | 44.954 |
-| **Tổng** | **122.957** |
+| `1. CSKH` | Gộp phiên chatbot và hoạt động CSKH từ file OP; đánh số và gán ngày báo cáo |
+| `2. SF Case info` | Đưa dữ liệu Salesforce vào báo cáo, áp dụng cấu hình tên và tra email |
+| `3. Other Tasks & Working time` | Đưa giờ làm và hoạt động khác vào báo cáo, chép đủ vùng C:M |
 
-**Ngày 13/9 khớp tuyệt đối — không sai một ô nào trên cả 8 hạng mục kiểm tra.**
+Khi ghi dữ liệu mới, tool dọn giá trị thừa của lần chạy trước, kể cả trường hợp số dòng giảm hoặc khối dữ liệu mới rỗng.
 
-### Mở bằng Excel thật
+### 3.5. Tổng hợp báo cáo và tính KPI
 
-Cả ba ngày đều được mở bằng Excel và kiểm tra:
+- Tính các chỉ tiêu có thể suy ra từ dữ liệu đầu vào cho `Summarize_team VietNam`.
+- Tổng hợp nội dung hỗ trợ theo nhóm Topic.
+- Xử lý công thức liên kết sang sheet `Summarize`.
+- Tính KPI theo từng nhân viên và dòng tổng team, ghi vào cột ngày của sheet KPI tháng.
+- Đọc và xử lý các mẫu định mức riêng đã hỗ trợ, gồm trường hợp nhân sự JP trong bộ dữ liệu 04/10.
+- Bổ sung kiểm tra người có công việc nhưng thiếu giờ KPI hoặc chưa có dòng trong danh sách nhân sự.
+- Giữ riêng các chỉ tiêu chưa đủ nguồn, cần người làm báo cáo bổ sung hoặc xác nhận.
 
-- File mở bình thường, không báo hỏng
-- Đủ 11 sheet, 4 bảng tổng hợp tự động, đúng như bản gốc
-- Bảng tổng hợp tính ra đúng số dòng của từng ngày
-- Bảng KPI ngày có số liệu, không còn bị rỗng
-- Ngày tháng đúng ở cả 6 vị trí
-- **Dữ liệu các ngày trước không bị đụng tới một ô nào**
+### 3.6. Ghi file Excel và bảo toàn cấu trúc báo cáo
 
----
+Tôi đã sử dụng cách chỉnh sửa có chọn lọc XML bên trong file `.xlsx`, thay vì dựng lại toàn bộ workbook từ bảng dữ liệu thuần.
 
-## Những chỗ còn lệch và vì sao
+Các phần đã xử lý gồm:
 
-Hai ngày 14 và 15 có tổng cộng **285 ô lệch trên 122.957 ô, tức 0,23%**.
-**Toàn bộ 285 ô đều đã truy được nguyên nhân, và không ô nào do công cụ tính sai.**
+- Giữ định dạng ô tại các vùng được cập nhật và duy trì các thành phần workbook liên quan.
+- Ghi lại công thức tra email và tổng giờ theo đúng vị trí dòng.
+- Cập nhật ngày báo cáo tại các ô tiêu đề.
+- Cập nhật vùng dữ liệu phục vụ Pivot và thiết lập tính lại khi mở bằng Excel.
+- Bật nhận mục ngày mới trong bộ lọc Pivot để tránh refresh xong không còn dữ liệu.
+- Tạo công thức phụ theo tên kênh, hạn chế phụ thuộc vào thứ tự cột của Pivot.
+- Giữ dữ liệu các ngày trước trong các vùng lịch sử đã kiểm thử.
 
-| Nguyên nhân | Số ô | Giải thích |
-|---|---|---|
-| Trạng thái case thay đổi | 245 | Dữ liệu Salesforce được tải về **muộn hơn** lúc team chốt báo cáo, case đã chuyển trạng thái. Không tránh được. |
-| File nhân viên bị sửa sau ngày chốt | 14 | File dùng chung, nhân viên sửa lại giờ làm sau khi báo cáo đã nộp |
-| Bảng tra email thiếu tên mới | 18 | Đã có cảnh báo đỏ, người làm chỉ cần thêm một dòng |
-| Dữ liệu khách hàng được ẩn danh khác đi | 5 | Không ảnh hưởng số liệu |
-| Bản làm tay tự mâu thuẫn | 3 | Xem ngay dưới đây |
+### 3.7. Bổ sung hỗ trợ lấy số liệu fanpage
 
-### Điểm cần lưu ý về chất lượng báo cáo làm tay
+Tôi đã xây dựng extension hỗ trợ lấy số follow của các fanpage SBIR, SMILES và DCOM, đưa số liệu sang tool hoặc sao chép để dán thủ công.
 
-Trong lúc đối chiếu, chúng tôi thấy **chính các bản báo cáo làm tay cũng có sai sót
-nhỏ** — không phải do ai cẩu thả, mà là chuyện tất yếu khi làm tay hàng nghìn dòng:
+Tool có trạng thái kết nối extension, cảnh báo khi thiếu số liệu và khi Facebook chỉ cung cấp số làm tròn. Phần xử lý workbook vẫn thực hiện trên máy người dùng; chức năng lấy số follow cần truy cập Facebook và phụ thuộc khả năng đọc dữ liệu từ trang tại thời điểm sử dụng.
 
-- Ngày 14/9, ô "VIBER" ghi **0** trong khi chính bảng dữ liệu của file đó có **3 dòng Viber**
-- Ngày 14/9, ô "số khách hàng" ghi **1619**, số đếm thật là **1618**
-- Ngày 15/9, quy tắc đổi tên người lập case chỉ áp dụng cho **23 trên 34 case** —
-  làm đến giữa chừng rồi dừng
+## 4. Các lỗi đã xử lý
 
-Công cụ làm nhất quán 100% nên những chỗ này hiện ra thành "lệch". **Đây là điểm
-mạnh, không phải điểm yếu** — nhưng cần nói trước để khi đối chiếu không ai hiểu
-nhầm là công cụ sai.
-
----
-
-## An toàn dữ liệu
-
-Không thay đổi so với báo cáo trước, nhưng nhắc lại vì đây là điều kiện bắt buộc
-của dự án: dữ liệu xử lý có **thông tin cá nhân khách hàng** (họ tên, ngày sinh,
-mã khách hàng, số điện thoại).
-
-Công cụ được thiết kế để **không có đường nào cho dữ liệu rời khỏi máy**: chạy
-hoàn toàn trong trình duyệt trên máy người dùng, không gửi gì lên mạng, không lưu
-file lại, không cần tài khoản. Không có server nghĩa là không có chỗ nào để rò rỉ.
-
----
-
-## Rủi ro còn lại
-
-| Rủi ro | Mức độ | Đã chuẩn bị gì |
-|---|---|---|
-| Nguồn dữ liệu đổi định dạng cột | Trung bình | Mọi quy tắc nằm trong màn hình **Cấu hình**, sửa được không cần lập trình viên |
-| File báo cáo tổng đổi cấu trúc | Trung bình | Có nút tự kiểm chứng, chạy là biết ngay chỗ lệch |
-| Người dùng quên mở bằng Excel | **Cao** | Đã đưa vào hướng dẫn như bước bắt buộc; cần nhắc trong buổi đào tạo |
-| Người dùng bỏ qua cảnh báo đỏ | **Cao** | Cảnh báo có màu và nêu rõ cách xử lý; nên yêu cầu xác nhận trong tuần đầu |
-| Chưa chạy thử trong công việc thật | Trung bình | Đề xuất chạy song song 1 tuần |
-
-Hai rủi ro cao đều thuộc về **thói quen người dùng**, không phải kỹ thuật. Cách
-xử lý là đào tạo và giám sát tuần đầu, không phải sửa công cụ.
-
----
-
-## Đề xuất
-
-**Nên làm ngay:**
-
-1. **Chạy song song một tuần** — người làm vẫn làm tay như cũ, đồng thời chạy công
-   cụ và so hai bản. Hết tuần không có chênh lệch bất ngờ thì chuyển hẳn.
-2. **Đào tạo 30 phút** cho người làm, nhấn hai điểm: bắt buộc mở bằng Excel, và
-   không bỏ qua cảnh báo đỏ.
-3. **Dọn bảng tra email** trong file báo cáo tổng: xoá tên trùng, bổ sung tên mới.
-
-**Nên làm sớm:**
-
-4. **Sửa định dạng cột ngày** trong file báo cáo của nhân viên, chấm dứt lỗi ghi
-   sai ngày đã nêu ở báo cáo trước.
-5. **Rà lại báo cáo các ngày 1–12** đã nộp, số liệu có thể đã thiếu.
-6. **Thống nhất quy tắc đổi tên người lập case**, hiện mỗi ngày áp dụng một khác.
-
-**Có thể cân nhắc về sau:**
-
-7. Kết nối thêm 4 báo cáo Salesforce, tự động nốt 9 chỉ tiêu tồn đọng.
-8. Cho công cụ ghi nhớ file báo cáo tổng, mỗi ngày chỉ cần kéo 3 file.
-
----
-
-## Kết luận
-
-Giai đoạn này không thêm nhiều tính năng mới, mà chủ yếu là **kiểm chứng cho chắc**
-và **sửa những chỗ sai mà lần kiểm tra đầu không nhìn thấy**.
-
-Kết quả đáng giá nhất là lỗi bảng KPI ra số 0: một lỗi mà mọi con số đều đúng
-nhưng file giao ra thì hỏng. Nếu không mở bằng Excel thật để kiểm tra, nó đã đi
-thẳng ra khách hàng.
-
-Công cụ hiện đã sẵn sàng dùng hằng ngày. Việc còn lại chủ yếu là **tổ chức**:
-chạy song song một tuần, đào tạo người dùng, và dọn lại vài chỗ trong dữ liệu nguồn.
-
----
-
-## Tài liệu liên quan
-
-| File | Dành cho ai |
+| Vấn đề | Công việc đã thực hiện |
 |---|---|
-| `HUONG-DAN-SU-DUNG.md` | Nhân viên làm báo cáo hằng ngày |
-| `flow.md` | Quy trình nghiệp vụ 19 bước đã đối chiếu và đính chính |
-| `tool/README.md` | Tài liệu kỹ thuật, dành cho người bảo trì công cụ |
+| Thiếu cột giờ “Khác” | Mở rộng ánh xạ Other Tasks từ C:L sang C:M và nâng cấp cấu hình cũ |
+| Kênh JP bị lệch khi Pivot đổi cột | Dựng cột phụ theo nhãn kênh thay vì sao chép vị trí cột cố định |
+| Các dòng dưới Pivot xuất hiện nhiều số 0 | Giữ công thức dự phòng nhưng trả trống khi không có dòng Pivot tương ứng |
+| Mất dữ liệu khi Pivot gặp ngày mới | Bật nhận mục mới trong bộ lọc Pivot |
+| 18 case không tra được email trong chuỗi 13 → 14 | Áp dụng quy tắc phân biệt tài khoản `(3M)` trong bảng tra và file xuất; không sửa file nền |
+| Bộ so sánh báo khớp sai chuỗi thời gian/ID | Không dùng cách đọc tiền tố số để so chuỗi; kiểm tra đúng nội dung ô |
+| Bỏ sót dòng thừa hoặc thiếu cuối bảng | So sánh toàn bộ phạm vi của cả hai bên, không chỉ phần giao nhau |
+| Coi hai email khác hậu tố là cùng người | So sánh email đầy đủ, không tự gộp tài khoản |
+| Start Time khác nhau giữa các bản chuẩn | Chọn mặc định `First response time`, thêm bộ chọn nguồn và giữ lựa chọn đã lưu |
+| Thay cấu hình nhưng vẫn tải kết quả cũ | Khóa đầu ra và yêu cầu xử lý lại |
+
+Việc sửa Start Time đã được điều chỉnh sau khi kiểm tra thêm dữ liệu tháng: không cố định `Requested time` cho mọi ngày chỉ để khớp riêng ngày 14.
+
+## 5. Kiểm thử và kết quả đã ghi nhận
+
+Tôi đã xây dựng các bài kiểm thử tự động, phép đối chiếu dữ liệu mẫu và kiểm tra bằng Microsoft Excel thật để xác nhận kết quả sau khi refresh Pivot, tính lại công thức.
+
+Các số liệu dưới đây là kết quả đã ghi nhận trong quá trình phát triển, không phải tuyên bố đã chạy lại toàn bộ kiểm thử vào ngày lập báo cáo này.
+
+### 5.1. Chuỗi ngày 13 → 14
+
+- Kiểm tra đủ 512 email trong SF Case; sửa được 18 email bị thiếu liên quan đến tài khoản `(3M)`.
+- Kiểm chứng 1.929 Start Time theo nguồn được chọn. Riêng bản chuẩn ngày 14 dùng `Requested time`, nên cần chọn nguồn này nếu muốn tái lập cách làm của bản chuẩn.
+- Kiểm tra bảo toàn 1.690 ô lịch sử, gồm giá trị và công thức, trên hai sheet tổng hợp.
+- Kiểm tra 38 KPI cá nhân và dòng tổng team khớp giữa ngày/tháng sau khi Excel tính lại.
+- Vẫn báo rõ chênh lệch trạng thái Salesforce, giờ làm và dòng dữ liệu thiếu so với bản chuẩn.
+
+### 5.2. Chuỗi ngày 14 → 15
+
+- Kiểm tra 2.741 dòng CSKH, 548 dòng SF Case và 176 dòng Other Tasks từ bộ nguồn đang có.
+- Khớp 1.997 Start Time với bản chuẩn khi dùng `First response time`.
+- Kiểm tra bảo toàn 1.820 ô lịch sử, gồm giá trị và công thức.
+- Kiểm tra 38 KPI cá nhân và dòng tổng team khớp giữa ngày/tháng sau refresh bằng Excel.
+- Phát hiện nguồn thiếu 16 dòng giờ làm so với 192 dòng trong bản chuẩn; vẫn còn các sai khác về Topic, trạng thái case, phân công và giờ làm.
+
+### 5.3. Bộ dữ liệu ngày 04/10
+
+- Kiểm tra việc chép đủ cột giờ “Khác”, tổng giờ và dữ liệu JP.
+- Ghi nhận 90 dòng đảo ngày/tháng trong nguồn; cần bật lựa chọn nhận các dòng này để tái tạo kết quả đối chiếu.
+- Kiểm tra KPI JP khoảng 113,08%, chỉ tiêu Tình trạng thẻ là 621 và tổng nội dung hỗ trợ là 2.167 trên bộ nguồn cung cấp.
+- Kiểm tra KPI ngày/tháng khớp cho 38 người sau khi Excel tính lại.
+- Kiểm tra 336 ô phụ tại các dòng trống dưới Pivot không còn hiện số 0.
+
+### 5.4. Phân biệt kiểm tra công thức với kiểm tra nguồn thực tế
+
+Tôi đã thực hiện phép thử riêng bằng dữ liệu các bảng chi tiết trong bản chuẩn ngày 14 và 15. Với bộ dữ liệu đó, phép tính tái tạo được 39/39 ô KPI đối chiếu.
+
+Kết quả này giúp khoanh vùng nguyên nhân chênh lệch, nhưng **không có nghĩa đầu ra từ bộ nguồn thực tế đã khớp 39/39 ô**. Các file kiểm thử dựng bằng dữ liệu bản chuẩn chỉ dùng để chẩn đoán, không được coi là báo cáo đã hoàn thiện để gửi.
+
+## 6. Đối chiếu toàn bộ báo cáo tháng 09
+
+Tôi đã bổ sung hai bộ kiểm tra để rà soát nguồn Start Time và các quy tắc tính toán trên 30 báo cáo ngày.
+
+Kết quả chính:
+
+- Đã quét 52.985 phiên chatbot trong 30 file báo cáo ngày.
+- Ghép và đối chiếu 30.796 phiên chatbot ngày 1–16 với file tổng hợp tháng; file này chưa có chatbot ngày 17–30.
+- Xác nhận từ Session gốc: ngày 13 và 15 dùng `First response time`, ngày 14 dùng `Requested time`.
+- Phát hiện 28 ô Summary không khớp bảng chi tiết trên 19 ngày.
+- Phát hiện 7 ô KPI cá nhân khác giữa ngày và tháng, trong đó 2 ô khác do làm tròn.
+- Trong phạm vi 1.122 kết quả KPI cá nhân có định mức được bộ kiểm tra nhận diện là chuẩn, phát hiện 8 kết quả khác phép tính hiện tại của tool; đây không phải kiểm chứng mọi định mức hoặc mọi nhân sự.
+- Phát hiện các tên kênh `Webform` và `ĐKM` cần được nhận diện là Đăng ký mới.
+- Phát hiện Setsumekai có thời lượng khác nhau và công thức quy đổi chưa thống nhất giữa các báo cáo.
+- Phát hiện tên tài khoản gốc và tên được thay thế cùng xuất hiện trong nhiều ngày, cho thấy luật đổi tên toàn bộ chưa đủ để biểu diễn mọi trường hợp phân công.
+
+Qua đối chiếu, tôi đã xác định rằng cần kiểm tra cả tính nhất quán bên trong báo cáo mẫu, không chỉ dùng số liệu của mẫu làm đáp án tuyệt đối.
+
+## 7. Các vấn đề còn tồn tại và hướng xử lý
+
+Các mục dưới đây đã được phát hiện hoặc đề xuất, **chưa được coi là đã triển khai hoàn tất**:
+
+| Nội dung | Tình trạng và hướng xử lý |
+|---|---|
+| Kênh `Webform` / `ĐKM` | Cần bổ sung vào nhóm Đăng ký mới và đồng bộ giữa JavaScript với công thức Excel |
+| Setsumekai | Hiện vẫn có quy đổi theo số dòng và hệ số cấu hình. Cần chuyển sang thời lượng thực tế, đồng thời thống nhất cách chống đếm trùng |
+| Phân công người lập case | Hiện có bảng đổi tên theo cấu hình. Cần bổ sung điều kiện theo case, ngày hoặc ca đã xác nhận |
+| Thiếu giờ làm | Cần nguồn bổ sung có ngày, email và nguồn gốc rõ ràng; không tự lấy giờ hôm trước hoặc mặc định 8 giờ |
+| Trạng thái Salesforce khác bản chuẩn | Cần bộ dữ liệu đúng thời điểm chốt; không suy đoán trạng thái cũ từ export hiện tại |
+| Mẫu tự mâu thuẫn | Cần thống nhất nguồn được ưu tiên và quy trình phê duyệt điều chỉnh |
+| Chỉ tiêu nhập tay, số follow và dữ liệu ngoài phạm vi | Người làm báo cáo vẫn cần bổ sung, xác nhận trước khi gửi |
+| Phạm vi kiểm chứng | Chưa đủ Session gốc của cả tháng để xác nhận mọi quy tắc nguồn; chưa có cơ sở kết luận đúng tuyệt đối cho mọi bộ dữ liệu |
+
+Thứ tự ưu tiên tiếp theo là sửa ánh xạ kênh đã xác định rõ, hoàn thiện quy tắc Setsumekai và phân công case, sau đó bổ sung kiểm tra tính đầy đủ của nguồn trước khi xuất báo cáo.
+
+## 8. Sản phẩm và tài liệu đã xây dựng
+
+| Thành phần | Vị trí |
+|---|---|
+| Giao diện tool | [tool/index.html](tool/index.html) |
+| Mã nguồn xử lý | [tool/src/](tool/src/) |
+| Extension lấy số follow | [extension/](extension/) |
+| Quy trình nghiệp vụ | [flow.md](flow.md) |
+| Hướng dẫn sử dụng | [HUONG-DAN-SU-DUNG.md](HUONG-DAN-SU-DUNG.md) |
+| Tài liệu kỹ thuật và ghi chú kiểm thử | [tool/README.md](tool/README.md) |
+| Bộ kiểm thử | [tool/tests/](tool/tests/) |
+| Kết quả đối chiếu thời gian cả tháng | [month-times-audit.json](tool/tests/artifacts/month-times-audit.json) |
+| Kết quả đối chiếu quy tắc cả tháng | [month-rules-audit.json](tool/tests/artifacts/month-rules-audit.json) |
+| Bản đóng gói tool | [tool/tool.zip](tool/tool.zip) |
+
+## 9. Kết luận
+
+Tôi đã xây dựng được luồng tự động hóa các bước chính của quy trình lập báo cáo Excel: nạp nguồn, làm sạch, tổng hợp, tính toán, ghi file và kiểm tra kết quả. Đồng thời, tôi đã bổ sung công cụ đối chiếu và kiểm thử thực tế để phát hiện lỗi kỹ thuật cũng như những bất nhất của dữ liệu mẫu.
+
+Kết quả hiện tại là một công cụ hỗ trợ có thể tiếp tục hoàn thiện trên nền tảng đã được kiểm chứng, không chỉ là bản sao thao tác thủ công của một ngày cụ thể. Để vận hành tổng quát và ổn định hơn, phần việc tiếp theo cần tập trung vào các quy tắc còn thiếu và tính đầy đủ, nhất quán của dữ liệu nguồn.
+
+Chưa có số liệu đo thời gian thao tác trước/sau hoặc tỷ lệ giảm lỗi trong vận hành thực tế, vì vậy báo cáo không đưa ra mức tiết kiệm hay hiệu quả định lượng chưa được kiểm chứng.

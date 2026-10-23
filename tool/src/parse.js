@@ -25,6 +25,28 @@
     return nfc(String(v));
   }
 
+  /* Chỉ dùng để trình bày cảnh báo: đọc nội dung hiển thị của đúng ô nguồn.
+     Không sửa cell.v, không dùng chuỗi đã định dạng để tính toán/đối chiếu. */
+  function sourceCellText(wb, sheet, row, col, fallback) {
+    var ws = wb && wb.Sheets && wb.Sheets[sheet];
+    if (!ws || !row || col === null || col === undefined) return cellToString(fallback);
+    var cell = ws[XLSX.utils.encode_cell({ r: row - 1, c: col })];
+    if (!cell || cell.t === 'z' || cell.v === null || cell.v === undefined) return '';
+    var shown;
+    if (cell.w !== undefined) shown = cell.w;
+    else if (typeof cell.v === 'number' && cell.z) {
+      try {
+        shown = XLSX.SSF.format(cell.z, cell.v, {
+          date1904: !!(wb.Workbook && wb.Workbook.WBProps && wb.Workbook.WBProps.date1904)
+        });
+      } catch (_) { /* Định dạng không đọc được: giữ nội dung, không đoán kiểu. */ }
+    }
+    if (shown !== undefined) {
+      return shown === '' && cell.v !== '' ? '(Ô có dữ liệu nhưng định dạng đang ẩn nội dung)' : cellToString(shown);
+    }
+    return cellToString(cell.v);
+  }
+
   /** Chuẩn hoá để SO SÁNH: NFC + bỏ khoảng trắng thừa + thường hoá. */
   function normText(v) {
     return cellToString(v).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -37,6 +59,16 @@
 
   function isBlank(v) {
     return v === null || v === undefined || String(v).trim() === '';
+  }
+
+  /** Chỉ gọi cho cột giờ: chuyển chuỗi số đầy đủ, không đoán dấu phân cách hay đơn vị.
+   * Không dùng parseFloat vì "6 giờ", "6,12", "6:12" sẽ bị đọc nhầm thành 6. */
+  function normalizeHours(v) {
+    if (typeof v !== 'string') return v;
+    var s = v.trim();
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(s)) return v;
+    var n = Number(s);
+    return isFinite(n) ? n : v;
   }
 
   /* ---------- ngày ---------- */
@@ -239,9 +271,11 @@
   return {
     nfc: nfc,
     cellToString: cellToString,
+    sourceCellText: sourceCellText,
     normText: normText,
     normName: normName,
     isBlank: isBlank,
+    normalizeHours: normalizeHours,
     serialToDate: serialToDate,
     dateToSerial: dateToSerial,
     serialToISO: serialToISO,

@@ -1,0 +1,3047 @@
+{
+  "days": [
+    {
+      "day": 1,
+      "rows": [
+        1861,
+        460,
+        128
+      ],
+      "summaryDiff": [
+        {
+          "row": 14,
+          "source": "viber",
+          "expected": 1,
+          "actual": 0
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 34,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.2027983957249,
+        "daily": 1.2027983957249,
+        "monthly": 1.2
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [
+        {
+          "email": "quynh.vn@altius-link.com.vn",
+          "count": 1,
+          "V": 45,
+          "formula": "I11*1*15*3",
+          "O": 117,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 29,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 1,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 5,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 120,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "quynh.vn@altius-link.com.vn",
+            "referenceKpiHours": 8,
+            "inputKpiHours": 7
+          },
+          {
+            "email": "long.thq@altius-link.com.vn",
+            "referenceKpiHours": 8,
+            "inputKpiHours": 7
+          }
+        ]
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 2,
+      "rows": [
+        2186,
+        418,
+        136
+      ],
+      "summaryDiff": [
+        {
+          "row": 12,
+          "source": "chatbot",
+          "expected": 1524,
+          "actual": 1523
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 34,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [
+        {
+          "email": "bao.nq@altius-link.com.vn",
+          "dailyRow": 51,
+          "monthRow": 43,
+          "daily": 1.05625,
+          "month": 1.06
+        }
+      ],
+      "team": {
+        "computed": 1.200250842337824,
+        "daily": 1.200250842337824,
+        "monthly": 1.200250842337824
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 38,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 6,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 2,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 128,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "duong.tt@altius-link.com.vn",
+            "referenceKpiHours": 8,
+            "inputKpiHours": 7
+          },
+          {
+            "email": "cuc.ht@altius-link.com.vn",
+            "referenceKpiHours": 7.90176470588235,
+            "inputKpiHours": 6.90176470588235
+          },
+          {
+            "email": "minh.dn@altius-link.com.vn",
+            "referenceKpiHours": 8.004117647058823,
+            "inputKpiHours": 7.000000000000004
+          },
+          {
+            "email": "bao.nq@altius-link.com.vn",
+            "referenceKpiHours": 8,
+            "inputKpiHours": 0
+          }
+        ]
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 3,
+      "rows": [
+        3277,
+        457,
+        192
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1344,
+          "actual": 1349
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [
+        {
+          "email": "duc.tt@altius-link.com.vn",
+          "row": 23,
+          "computed": 1.9574660633484164,
+          "actual": 1.4856711915535448,
+          "E": 102,
+          "actualE": 56,
+          "hours": 6.5
+        }
+      ],
+      "dailyMonthDiff": [
+        {
+          "email": "duc.tt@altius-link.com.vn",
+          "dailyRow": 23,
+          "monthRow": 16,
+          "daily": 1.4856711915535448,
+          "month": 1.755793226381462
+        }
+      ],
+      "team": {
+        "computed": 1.505520988311571,
+        "daily": 1.4807403147018792,
+        "monthly": 1.4928031410284057
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "huong.tl@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "nguyen.nt@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "anh.np@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [
+        {
+          "email": "duc.tt@altius-link.com.vn",
+          "row": 17,
+          "expected": 102,
+          "actual": 56,
+          "formula": "K17-P17-Q17-R17-S17-T17-U17-V17"
+        }
+      ],
+      "sets": [
+        {
+          "email": "duc.tt@altius-link.com.vn",
+          "count": 1,
+          "V": 1,
+          "formula": "J17",
+          "O": 56,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 28,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 3,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 3,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 168,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "linh.lp@altius-link.com.vn",
+            "referenceKpiHours": 5.503921568627447,
+            "inputKpiHours": 7.003921568627448
+          },
+          {
+            "email": "duc.tt@altius-link.com.vn",
+            "referenceKpiHours": 6.5,
+            "inputKpiHours": 5.5
+          },
+          {
+            "email": "quynh.dtn1@altius-link.com.vn",
+            "referenceKpiHours": 6.500588235294119,
+            "inputKpiHours": 6.5
+          }
+        ]
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 4,
+      "rows": [
+        2945,
+        625,
+        184
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1929,
+          "actual": 1930
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.3475262403916923,
+        "daily": 1.3475262403916926,
+        "monthly": 1.3475262403916926
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.d@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "ly.ntk1@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "huong.tl@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "nguyen.nt@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "anh.np@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 12,
+          "targetNameCases": 17
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 22
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 0,
+          "targetNameCases": 23
+        }
+      ],
+      "op": {
+        "rows": 168,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "thuy.ntt1@altius-link.com.vn",
+            "referenceKpiHours": 3.5,
+            "inputKpiHours": 3
+          },
+          {
+            "email": "ly.ntk@altius-link.com.vn",
+            "referenceKpiHours": 7,
+            "inputKpiHours": 6.999411764705879
+          },
+          {
+            "email": "cuc.ht@altius-link.com.vn",
+            "referenceKpiHours": 7,
+            "inputKpiHours": 6.5
+          }
+        ]
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 5,
+      "rows": [
+        2071,
+        489,
+        152
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1518,
+          "actual": 1519
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.2354939905044602,
+        "daily": 1.2354939905044602,
+        "monthly": 1.2354939905044602
+      },
+      "missingHours": [
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 0,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 1,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 0,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 144,
+        "missingPeople": [
+          "huy.d@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 6,
+      "rows": [
+        2242,
+        444,
+        144
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.3617083569028803,
+        "daily": 1.3617083569028803,
+        "monthly": 1.3617083569028803
+      },
+      "missingHours": [
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 34,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 11,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 136,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 7,
+      "rows": [
+        2593,
+        527,
+        200
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1816,
+          "actual": 1817
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [
+        {
+          "email": "thang.nt@altius-link.com.vn",
+          "row": 24,
+          "computed": 1.1857142857142857,
+          "actual": 1.6047619047619048,
+          "E": 119,
+          "actualE": 163,
+          "hours": 7
+        },
+        {
+          "email": "huong.pl@altius-link.com.vn",
+          "row": 25,
+          "computed": 1.7834733893557424,
+          "actual": 1.773949579831933,
+          "E": 159,
+          "actualE": 158,
+          "hours": 7
+        }
+      ],
+      "dailyMonthDiff": [
+        {
+          "email": "thang.nt@altius-link.com.vn",
+          "dailyRow": 24,
+          "monthRow": 17,
+          "daily": 1.6047619047619048,
+          "month": 2.2466666666666666
+        },
+        {
+          "email": "huong.pl@altius-link.com.vn",
+          "dailyRow": 25,
+          "monthRow": 18,
+          "daily": 1.773949579831933,
+          "month": 2.069607843137255
+        }
+      ],
+      "team": {
+        "computed": 1.4237822045439419,
+        "daily": 1.450083743957572,
+        "monthly": 1.4911268108502094
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [
+        {
+          "email": "thang.nt@altius-link.com.vn",
+          "row": 5,
+          "expected": 119,
+          "actual": 163,
+          "formula": "J5-P5-Q5-R5-S5-T5-U5+V5"
+        },
+        {
+          "email": "huong.pl@altius-link.com.vn",
+          "row": 8,
+          "expected": 159,
+          "actual": 158,
+          "formula": "J8-P8-Q8-R8-S8-T8-U8+V8"
+        }
+      ],
+      "sets": [
+        {
+          "email": "thang.nt@altius-link.com.vn",
+          "count": 1,
+          "V": 89,
+          "formula": "I5*2*15*3-1",
+          "O": 163,
+          "otherHours": [
+            2
+          ]
+        },
+        {
+          "email": "huong.pl@altius-link.com.vn",
+          "count": 1,
+          "V": 44,
+          "formula": "I8*1*15*3-1",
+          "O": 158,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 23,
+          "targetNameCases": 13
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 16
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 10,
+          "targetNameCases": 19
+        }
+      ],
+      "op": {
+        "rows": 152,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "thang.nt@altius-link.com.vn",
+            "referenceKpiHours": 7,
+            "inputKpiHours": 5
+          },
+          {
+            "email": "huong.pl@altius-link.com.vn",
+            "referenceKpiHours": 7,
+            "inputKpiHours": 6
+          }
+        ]
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 8,
+      "rows": [
+        3090,
+        579,
+        208
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 2131,
+          "actual": 2130
+        },
+        {
+          "row": 12,
+          "source": "chatbot",
+          "expected": 2450,
+          "actual": 2449
+        },
+        {
+          "row": 13,
+          "source": "zalo",
+          "expected": 56,
+          "actual": 55
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [
+        {
+          "email": "thao.tp@altius-link.com.vn",
+          "row": 33,
+          "computed": 1.3857142857142857,
+          "actual": 1.3761904761904762,
+          "E": 111,
+          "actualE": 110,
+          "hours": 7
+        }
+      ],
+      "dailyMonthDiff": [
+        {
+          "email": "thao.tp@altius-link.com.vn",
+          "dailyRow": 33,
+          "monthRow": 26,
+          "daily": 1.3761904761904762,
+          "month": 1.6055555555555554
+        }
+      ],
+      "team": {
+        "computed": 1.3794431705421055,
+        "daily": 1.3789686554895115,
+        "monthly": 1.3888541384074973
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [
+        {
+          "email": "thao.tp@altius-link.com.vn",
+          "row": 20,
+          "expected": 111,
+          "actual": 110,
+          "formula": "J20-P20-Q20-R20-S20-T20-U20+V20"
+        }
+      ],
+      "sets": [
+        {
+          "email": "thao.tp@altius-link.com.vn",
+          "count": 1,
+          "V": 44,
+          "formula": "IF(I20=\"\",0,I20*1*15*3-1)",
+          "O": 110,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 14,
+          "targetNameCases": 20
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 16
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 10,
+          "targetNameCases": 14
+        }
+      ],
+      "op": {
+        "rows": 168,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "thao.tp@altius-link.com.vn",
+            "referenceKpiHours": 7,
+            "inputKpiHours": 6
+          }
+        ]
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 9,
+      "rows": [
+        3315,
+        677,
+        224
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.3284417994138198,
+        "daily": 1.3284417994138198,
+        "monthly": 1.3284417994138198
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 16,
+          "targetNameCases": 19
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 11
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 12,
+          "targetNameCases": 26
+        }
+      ],
+      "op": {
+        "rows": 184,
+        "missingPeople": [
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "huy.d@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "quynh.vn@altius-link.com.vn",
+            "referenceKpiHours": 7.00176470588235,
+            "inputKpiHours": 5
+          },
+          {
+            "email": "van.vth1@altius-link.com.vn",
+            "referenceKpiHours": 11,
+            "inputKpiHours": 12
+          }
+        ]
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 10,
+      "rows": [
+        3086,
+        628,
+        192
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1965,
+          "actual": 1966
+        },
+        {
+          "row": 12,
+          "source": "chatbot",
+          "expected": 2301,
+          "actual": 2300
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.3047273500121448,
+        "daily": 1.3047273500121448,
+        "monthly": 1.3047273500121448
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "huong.tl@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "nguyen.nt@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "anh.np@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 0,
+          "targetNameCases": 10
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 3,
+          "targetNameCases": 16
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 8,
+          "targetNameCases": 29
+        }
+      ],
+      "op": {
+        "rows": 168,
+        "missingPeople": [
+          "thuy.dt@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "huy.d@altius-link.com.vn",
+            "referenceKpiHours": 7,
+            "inputKpiHours": 5.72
+          }
+        ]
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 11,
+      "rows": [
+        3004,
+        574,
+        208
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.3734534123727011,
+        "daily": 1.3734534123727011,
+        "monthly": 1.3734534123727011
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 21,
+          "targetNameCases": 16
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 25
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 12,
+          "targetNameCases": 23
+        }
+      ],
+      "op": {
+        "rows": 168,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 12,
+      "rows": [
+        2116,
+        414,
+        144
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1504,
+          "actual": 1505
+        },
+        {
+          "row": 28,
+          "source": "sfcase",
+          "expected": 381,
+          "actual": 16
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.307925462862795,
+        "daily": 1.3079254628627952,
+        "monthly": 1.3082538713565979
+      },
+      "missingHours": [
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [
+        {
+          "email": "thuy.ntt1@altius-link.com.vn",
+          "count": 1,
+          "V": 45,
+          "formula": "H11*1*45",
+          "O": 78,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 26,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 8,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 8,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 136,
+        "missingPeople": [
+          "thuy.dt@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 13,
+      "rows": [
+        2218,
+        379,
+        152
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.347680995475113,
+        "daily": 1.3476809954751134,
+        "monthly": 1.3476809954751134
+      },
+      "missingHours": [
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quynh.dtn1@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 0,
+          "targetNameCases": 19
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 19
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 6,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 128,
+        "missingPeople": [
+          "ly.ntk1@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 1,
+      "mailDuplicates": 0,
+      "raw": {
+        "matched": 379,
+        "statusChanges": {},
+        "customerDiff": 0,
+        "customerCaseOnly": 0,
+        "aliases": {
+          "PHAM THI THU HOAI -> PHAM THI THU HOAI": 6,
+          "VU NHU QUYNH -> NGUYEN PHUONG ANH": 19,
+          "LUU NGOC QUANG -> NGUYEN THAO NGUYEN": 19
+        }
+      }
+    },
+    {
+      "day": 14,
+      "rows": [
+        2577,
+        512,
+        192
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1710,
+          "actual": 1708
+        },
+        {
+          "row": 14,
+          "source": "viber",
+          "expected": 3,
+          "actual": 0
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.3095795162459634,
+        "daily": 1.3095795162459634,
+        "monthly": 1.3095795162459634
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [
+        {
+          "email": "anh.bn1@altius-link.com.vn",
+          "count": 1,
+          "V": 45,
+          "formula": "I22*1*45",
+          "O": 201,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 0,
+          "targetNameCases": 13
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 20
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 0,
+          "targetNameCases": 18
+        }
+      ],
+      "op": {
+        "rows": 160,
+        "missingPeople": [
+          "ly.ntk1@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "anh.bn1@altius-link.com.vn",
+            "referenceKpiHours": 7,
+            "inputKpiHours": 6
+          }
+        ]
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0,
+      "raw": {
+        "matched": 512,
+        "statusChanges": {
+          "Processing request/処理依頼 -> Complete/完了": 96,
+          "On processed/処理中 -> Complete/完了": 27,
+          "On processed/処理中 -> Processing request/処理依頼": 2,
+          "Processing request/処理依頼 -> Waiting for input/入力待ち": 1,
+          "Complete/完了 -> On processed/処理中": 1
+        },
+        "customerDiff": 1,
+        "customerCaseOnly": 0,
+        "aliases": {
+          "PHAM THI THU HOAI -> TRAN LAN HUONG": 18,
+          "LUU NGOC QUANG -> NGUYEN THAO NGUYEN": 20,
+          "VU NHU QUYNH -> NGUYEN PHUONG ANH": 13
+        }
+      }
+    },
+    {
+      "day": 15,
+      "rows": [
+        2741,
+        548,
+        192
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.2468034479102346,
+        "daily": 1.2468034479102346,
+        "monthly": 1.2468034479102346
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 0,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 11,
+          "targetNameCases": 23
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 10,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 176,
+        "missingPeople": [
+          "ly.ntk1@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "thuy.ntt1@altius-link.com.vn",
+            "referenceKpiHours": 6.75,
+            "inputKpiHours": 6.5
+          },
+          {
+            "email": "cuc.ht@altius-link.com.vn",
+            "referenceKpiHours": 7,
+            "inputKpiHours": 7.35
+          }
+        ]
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0,
+      "raw": {
+        "matched": 548,
+        "statusChanges": {
+          "Processing request/処理依頼 -> Complete/完了": 74,
+          "Waiting for input/入力待ち -> Complete/完了": 14,
+          "On processed/処理中 -> Complete/完了": 26,
+          "Waiting for input/入力待ち -> Processing request/処理依頼": 1,
+          "Processing request/処理依頼 -> Waiting for input/入力待ち": 1,
+          "Processing request/処理依頼 -> On processed/処理中": 1,
+          "On processed/処理中 -> Processing request/処理依頼": 1
+        },
+        "customerDiff": 4,
+        "customerCaseOnly": 3,
+        "aliases": {
+          "LUU NGOC QUANG -> NGUYEN THAO NGUYEN": 23,
+          "PHAM THI THU HOAI -> PHAM THI THU HOAI": 10,
+          "LUU NGOC QUANG -> LUU NGOC QUANG": 11
+        }
+      }
+    },
+    {
+      "day": 16,
+      "rows": [
+        2170,
+        391,
+        160
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1568,
+          "actual": 1569
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [
+        {
+          "email": "cuc.ht@altius-link.com.vn",
+          "row": 39,
+          "computed": 1.1575275794938351,
+          "actual": 1.359777200951763,
+          "E": 116,
+          "actualE": 138,
+          "hours": 7.251764705882353
+        }
+      ],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.5101712360410071,
+        "daily": 1.5262440881772141,
+        "monthly": 1.5262440881772141
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "quynh.vn@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [
+        {
+          "email": "cuc.ht@altius-link.com.vn",
+          "row": 8,
+          "expected": 116,
+          "actual": 138,
+          "formula": "J8-P8-Q8-R8-S8-T8-U8+V8"
+        }
+      ],
+      "sets": [
+        {
+          "email": "cuc.ht@altius-link.com.vn",
+          "count": 1,
+          "V": 67,
+          "formula": "I8*1.5*45-0.5",
+          "O": 138,
+          "otherHours": [
+            1.5
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 2,
+          "targetNameCases": 10
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 8,
+          "targetNameCases": 11
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 10,
+          "targetNameCases": 12
+        }
+      ],
+      "op": {
+        "rows": 136,
+        "missingPeople": [
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "cuc.ht@altius-link.com.vn",
+            "referenceKpiHours": 7.251764705882353,
+            "inputKpiHours": 5.751764705882353
+          }
+        ]
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 17,
+      "rows": [
+        2711,
+        534,
+        184
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [
+        {
+          "email": "thuy.ln@altius-link.com.vn",
+          "row": 26,
+          "computed": 1.5131306527187538,
+          "actual": 1.3464095020159097,
+          "E": 154,
+          "actualE": 131.5,
+          "hours": 8.997058823529409
+        }
+      ],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.2646906010210959,
+        "daily": 1.2537410847320802,
+        "monthly": 1.2537410847320802
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [
+        {
+          "email": "thuy.ln@altius-link.com.vn",
+          "row": 8,
+          "expected": 154,
+          "actual": 131.5,
+          "formula": "J8-P8-Q8-R8-S8-T8-U8+V8"
+        }
+      ],
+      "sets": [
+        {
+          "email": "thuy.ln@altius-link.com.vn",
+          "count": 1,
+          "V": 22.5,
+          "formula": "I8*0.5*45",
+          "O": 131.5,
+          "otherHours": [
+            0.5
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 21,
+          "targetNameCases": 19
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 9,
+          "targetNameCases": 25
+        }
+      ],
+      "op": {
+        "rows": 152,
+        "missingPeople": [
+          "trang.th@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": [
+          {
+            "email": "thuy.ln@altius-link.com.vn",
+            "referenceKpiHours": 8.997058823529409,
+            "inputKpiHours": 8.5
+          },
+          {
+            "email": "huy.d@altius-link.com.vn",
+            "referenceKpiHours": 5.5,
+            "inputKpiHours": 5.3
+          }
+        ]
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 18,
+      "rows": [
+        2539,
+        489,
+        192
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.2021286176265915,
+        "daily": 1.2021286176265917,
+        "monthly": 1.2021286176265917
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 10,
+          "targetNameCases": 11
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 7,
+          "targetNameCases": 15
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 7,
+          "targetNameCases": 21
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "thu.ntn@altius-link.com.vn",
+          "quynh.dtn1@altius-link.com.vn",
+          "cuc.ht@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "thuy.ntt1@altius-link.com.vn",
+          "duc.tt@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "thai.nq@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "trang.th@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "anh.np@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 19,
+      "rows": [
+        1756,
+        292,
+        152
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1003,
+          "actual": 1004
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.053570907446048,
+        "daily": 1.053570907446048,
+        "monthly": 1.053570907446048
+      },
+      "missingHours": [
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 8,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 3,
+          "targetNameCases": 13
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 3,
+          "targetNameCases": 23
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "thai.nq@altius-link.com.vn",
+          "phong.ht@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "duong.tt@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "quynh.dtn1@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "cuc.ht@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "duc.tt@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 20,
+      "rows": [
+        1989,
+        297,
+        152
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1066,
+          "actual": 1067
+        }
+      ],
+      "unknownChannels": {
+        "Webform": 1
+      },
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [
+        {
+          "email": "linh.btk@altius-link.com.vn",
+          "row": 34,
+          "computed": 0.8300428463412588,
+          "actual": 0.8276624940491195,
+          "E": 47,
+          "actualE": 46,
+          "hours": 7.0017647058823504
+        }
+      ],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.2755871579400995,
+        "daily": 1.275404007756949,
+        "monthly": 1.275404007756949
+      },
+      "missingHours": [
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [
+        {
+          "email": "linh.btk@altius-link.com.vn",
+          "row": 15,
+          "expected": 47,
+          "actual": 46,
+          "formula": "J15-P15-Q15-R15-S15-T15-U15+V15"
+        }
+      ],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 0,
+          "targetNameCases": 10
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 23
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 3,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "duong.tt@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "thai.nq@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "quynh.dtn1@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "trang.th@altius-link.com.vn",
+          "thuy.ln@altius-link.com.vn",
+          "cuc.ht@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 21,
+      "rows": [
+        1777,
+        337,
+        152
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {
+        "ĐKM": 1
+      },
+      "kpiChecked": 37,
+      "rateSkipped": 1,
+      "kpiDiff": [
+        {
+          "email": "van.vth1@altius-link.com.vn",
+          "row": 27,
+          "computed": 1.2666666666666668,
+          "actual": 1.2642857142857142,
+          "E": 126,
+          "actualE": 125,
+          "hours": 7
+        }
+      ],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.1294224131248605,
+        "daily": 1.1292286226283461,
+        "monthly": 1.1292286226283461
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [
+        {
+          "email": "van.vth1@altius-link.com.vn",
+          "row": 6,
+          "expected": 126,
+          "actual": 125,
+          "formula": "K6-P6-Q6-R6-S6-T6-U6+V6"
+        }
+      ],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 19,
+          "targetNameCases": 27
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 2,
+          "targetNameCases": 16
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 4,
+          "targetNameCases": 8
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "thuy.ntt1@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "quynh.dtn1@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "anh.bn1@altius-link.com.vn",
+          "thu.ntn@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "thuy.ln@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "trang.th@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 22,
+      "rows": [
+        1956,
+        322,
+        176
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1158,
+          "actual": 1154
+        },
+        {
+          "row": 16,
+          "source": "tel",
+          "expected": 4,
+          "actual": 0
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.0175653785755734,
+        "daily": 1.0175653785755734,
+        "monthly": 1.0175653785755734
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "tu.nt1@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "bach.vh@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 12,
+          "targetNameCases": 12
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 0,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "thai.nq@altius-link.com.vn",
+          "duong.tt@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "phong.ht@altius-link.com.vn",
+          "anh.bn1@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "thuy.ln@altius-link.com.vn",
+          "thuy.ntt1@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "thu.ntn@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "anh.np@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 23,
+      "rows": [
+        2007,
+        278,
+        176
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.1380510948830775,
+        "daily": 1.1380510948830775,
+        "monthly": 1.1380510948830775
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "tu.nt1@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "bach.vh@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 11,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 10
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 0,
+          "targetNameCases": 16
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "quynh.dtn1@altius-link.com.vn",
+          "thuy.ntt1@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "duong.tt@altius-link.com.vn",
+          "anh.bn1@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 24,
+      "rows": [
+        2509,
+        338,
+        200
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1347,
+          "actual": 1448
+        },
+        {
+          "row": 12,
+          "source": "chatbot",
+          "expected": 1650,
+          "actual": 1649
+        },
+        {
+          "row": 28,
+          "source": "sfcase",
+          "expected": 800
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.1990297380923087,
+        "daily": 1.1990297380923087,
+        "monthly": 1.1990297380923087
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [
+        {
+          "email": "linh.btk@altius-link.com.vn",
+          "count": 1,
+          "V": 45,
+          "formula": "I20*1*45",
+          "O": 90,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 4,
+          "targetNameCases": 10
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 5,
+          "targetNameCases": 26
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 3,
+          "targetNameCases": 15
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "anh.bn1@altius-link.com.vn",
+          "phong.ht@altius-link.com.vn",
+          "thu.ntn@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "duc.tt@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "thai.nq@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "quynh.dtn1@altius-link.com.vn",
+          "thuy.ln@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "cuc.ht@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "trang.th@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "anh.np@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "thuy.ntt1@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 25,
+      "rows": [
+        2478,
+        379,
+        208
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.1529723205501405,
+        "daily": 1.1529723205501405,
+        "monthly": 1.1529723205501405
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "tu.nt1@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "bach.vh@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 9,
+          "targetNameCases": 13
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 6
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 2,
+          "targetNameCases": 11
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "quynh.dtn1@altius-link.com.vn",
+          "thu.ntn@altius-link.com.vn",
+          "duong.tt@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "cuc.ht@altius-link.com.vn",
+          "thuy.ntt1@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "phong.ht@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "trang.th@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "anh.np@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 26,
+      "rows": [
+        2405,
+        321,
+        176
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1381,
+          "actual": 1382
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.1993754325358468,
+        "daily": 1.199375432535847,
+        "monthly": 1.199375432535847
+      },
+      "missingHours": [
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 0,
+          "targetNameCases": 16
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 3,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 0,
+          "targetNameCases": 11
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "phong.ht@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "duong.tt@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "thu.ntn@altius-link.com.vn",
+          "thuy.ln@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "thuy.ntt1@altius-link.com.vn",
+          "duc.tt@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 27,
+      "rows": [
+        2162,
+        417,
+        168
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1300,
+          "actual": 1301
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.188150693248306,
+        "daily": 1.18815069324831,
+        "monthly": 1.18815069324831
+      },
+      "missingHours": [
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 9,
+          "targetNameCases": 0
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 0,
+          "targetNameCases": 20
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 3,
+          "targetNameCases": 17
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "van.vth1@altius-link.com.vn",
+          "thu.ntn@altius-link.com.vn",
+          "phong.ht@altius-link.com.vn",
+          "duong.tt@altius-link.com.vn",
+          "thai.nq@altius-link.com.vn",
+          "quynh.dtn1@altius-link.com.vn",
+          "anh.bn1@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "trang.th@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "tu.nt1@altius-link.com.vn",
+          "bach.vh@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 28,
+      "rows": [
+        2754,
+        434,
+        176
+      ],
+      "summaryDiff": [],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [
+        {
+          "email": "anh.np@altius-link.com.vn",
+          "dailyRow": 51,
+          "monthRow": 44,
+          "daily": 0.5904761904761905,
+          "month": 0
+        }
+      ],
+      "team": {
+        "computed": 1.3097894965926018,
+        "daily": 1.3097894965926016,
+        "monthly": 1.3097894965926016
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "tu.nt1@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [
+        {
+          "email": "thu.ntn@altius-link.com.vn",
+          "count": 1,
+          "V": 45,
+          "formula": "I13*1*45",
+          "O": 93,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 18,
+          "targetNameCases": 24
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 2,
+          "targetNameCases": 0
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 4,
+          "targetNameCases": 0
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "thai.nq@altius-link.com.vn",
+          "van.vth1@altius-link.com.vn",
+          "thu.ntn@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "cuc.ht@altius-link.com.vn",
+          "quynh.dtn1@altius-link.com.vn",
+          "anh.bn1@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "thuy.ln@altius-link.com.vn",
+          "duc.tt@altius-link.com.vn",
+          "trang.th@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "anh.np@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 29,
+      "rows": [
+        2589,
+        446,
+        232
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1443,
+          "actual": 1445
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [],
+      "team": {
+        "computed": 1.1483418237140115,
+        "daily": 1.1483418237140115,
+        "monthly": 1.1483418237140115
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "hoai.ptt@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        },
+        {
+          "email": "long.thq@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [
+        {
+          "email": "bich.dt@altius-link.com.vn",
+          "count": 1,
+          "V": 45,
+          "formula": "I12*1*45",
+          "O": 104,
+          "otherHours": [
+            1
+          ]
+        }
+      ],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 2,
+          "targetNameCases": 12
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 3,
+          "targetNameCases": 18
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 1,
+          "targetNameCases": 17
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "phong.ht@altius-link.com.vn",
+          "thang.nt@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "cuc.ht@altius-link.com.vn",
+          "tu.nt1@altius-link.com.vn",
+          "tu.nt2@altius-link.com.vn",
+          "huong.pl@altius-link.com.vn",
+          "linh.btk@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "anh.bn1@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "thuy.ln@altius-link.com.vn",
+          "thai.nq@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "trang.th@altius-link.com.vn",
+          "thuy.ntt1@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "duc.tt@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "ly.ntk1@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn",
+          "anh.np@altius-link.com.vn",
+          "bach.vh@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    },
+    {
+      "day": 30,
+      "rows": [
+        2900,
+        450,
+        208
+      ],
+      "summaryDiff": [
+        {
+          "row": 11,
+          "source": "customerFormula",
+          "expected": 1610,
+          "actual": 1609
+        },
+        {
+          "row": 14,
+          "source": "viber",
+          "expected": 1,
+          "actual": 0
+        }
+      ],
+      "unknownChannels": {},
+      "kpiChecked": 39,
+      "rateSkipped": 1,
+      "kpiDiff": [],
+      "dailyMonthDiff": [
+        {
+          "email": "bao.nq@altius-link.com.vn",
+          "dailyRow": 56,
+          "monthRow": 48,
+          "daily": 1.4357142857142857,
+          "month": 1.44
+        }
+      ],
+      "team": {
+        "computed": 1.2758938583998953,
+        "daily": 1.2758938583998953,
+        "monthly": 1.2758938583998953
+      },
+      "missingHours": [
+        {
+          "email": "oanh.dtk@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "huy.nq1@altius-link.vn",
+          "actual": 0
+        },
+        {
+          "email": "quang.ln@altius-link.com.vn",
+          "actual": 0
+        }
+      ],
+      "helperDiff": [],
+      "sets": [],
+      "aliases": [
+        {
+          "from": "VU NHU QUYNH",
+          "to": "NGUYEN PHUONG ANH",
+          "sourceNameCases": 17,
+          "targetNameCases": 21
+        },
+        {
+          "from": "LUU NGOC QUANG",
+          "to": "NGUYEN THAO NGUYEN",
+          "sourceNameCases": 3,
+          "targetNameCases": 5
+        },
+        {
+          "from": "PHAM THI THU HOAI",
+          "to": "TRAN LAN HUONG",
+          "sourceNameCases": 0,
+          "targetNameCases": 14
+        }
+      ],
+      "op": {
+        "rows": 0,
+        "missingPeople": [
+          "duong.tt@altius-link.com.vn",
+          "quynh.dtn1@altius-link.com.vn",
+          "anh.bn1@altius-link.com.vn",
+          "thao.tp@altius-link.com.vn",
+          "bach.vh@altius-link.com.vn",
+          "cuc.ht@altius-link.com.vn",
+          "thuy.dt@altius-link.com.vn",
+          "trang.nt@altius-link.com.vn",
+          "minh.dn@altius-link.com.vn",
+          "thuy.ntt1@altius-link.com.vn",
+          "thuy.nth@altius-link.com.vn",
+          "phong.ht@altius-link.com.vn",
+          "quynh.vn@altius-link.com.vn",
+          "anh.np@altius-link.com.vn",
+          "thai.nq@altius-link.com.vn",
+          "long.lv@altius-link.com.vn",
+          "bao.nq@altius-link.com.vn",
+          "huy.d@altius-link.com.vn",
+          "ly.ntk@altius-link.com.vn",
+          "long.thq@altius-link.com.vn",
+          "huong.tl@altius-link.com.vn",
+          "bich.dt@altius-link.com.vn",
+          "linh.dp1@altius-link.com.vn",
+          "duc.tt@altius-link.com.vn",
+          "tu.nt1@altius-link.com.vn",
+          "nguyen.nt@altius-link.com.vn"
+        ],
+        "extraPeople": [],
+        "hoursDiff": []
+      },
+      "mailCorrections": 0,
+      "mailDuplicates": 0
+    }
+  ]
+}

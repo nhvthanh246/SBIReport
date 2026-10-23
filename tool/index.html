@@ -52,11 +52,25 @@
 
     <div class="metrics" id="metrics"></div>
 
+    <section class="warning-panel" id="warning-panel" aria-labelledby="warning-title">
+      <div class="warning-head">
+        <span class="warning-icon" id="warning-icon" aria-hidden="true">!</span>
+        <div>
+          <h2 id="warning-title">Cảnh báo dữ liệu</h2>
+          <p id="warning-summary" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </div>
+      <p class="warning-policy">Tool không tự đoán dữ liệu còn thiếu. Bấm “Xem chi tiết” khi cần biết người hoặc ô liên quan.</p>
+      <div class="issue-group" id="issues"></div>
+    </section>
+    <div id="marked-downloads" class="hidden"></div>
+    <div id="processing-notes"></div>
+
     <label class="opt-row" id="opt-swapped">
       <input type="checkbox" id="accept-swapped">
       <span class="o-body">
-        <span class="o-t">Nhận cả dòng bị <strong>đảo ngày/tháng</strong> trong file nhân viên</span>
-        <span class="o-d" id="opt-swapped-d">Lỗi locale lúc nhập liệu. Chỉ ảnh hưởng báo cáo ngày 1–12.</span>
+        <span class="o-t">Nhận cả dòng <strong>có thể đảo ngày/tháng</strong> trong file nhân viên</span>
+        <span class="o-d" id="opt-swapped-d">Cần xác nhận ngày làm việc trước khi nhận. Không tự sửa trường hợp quên đổi ngày hôm trước.</span>
       </span>
     </label>
 
@@ -77,7 +91,6 @@
       </details>
     </div>
 
-    <div class="issue-group" id="issues"></div>
   </section>
 
   <!-- ============ 3. XUẤT FILE ============ -->
@@ -150,7 +163,11 @@
       <p class="hint">
         Khi một nhân viên lập case bằng tài khoản Salesforce dùng chung, tên trên case
         không phải tên của họ. Các luật dưới đây đổi về tên thật trước khi tra email.
-        <br>Nhân viên đã có tài khoản riêng thì <b>xoá luật của họ đi</b>.
+        <br>SBI thống nhất: gán tên ai thì toàn bộ case tính cho người đó, không tự chia đôi như khi làm tay.
+        Bảng gán hiện tại giữ từ DataQuyTac: Quỳnh → Phương Anh, Quang → Thảo Nguyên; Hoài giữ nguyên.
+        Kiểm tra tên được gán đúng với ngày báo cáo. Tài khoản mượn như CC-VN cần xác nhận người dùng trước khi thêm luật.
+        Không tự chia case Khánh Ly hoặc điền giờ còn thiếu. Ngoại lệ cũ ngày 11/10 đã tắt;
+        chỉ bật <code>approvedAdjustments</code> trong Cấu hình JSON khi có xác nhận mới.
       </p>
 
       <div class="al-list" id="al-list"></div>
@@ -182,6 +199,20 @@
       <p class="hint">
         Luật lọc, ánh xạ cột, ô neo và bảng email. Lưu trong trình duyệt này.
         Khi web nguồn đổi tên cột thì sửa ở đây, không cần sửa code.
+      </p>
+      <div class="row" style="margin-bottom:10px">
+        <label class="lbl" for="start-time-source">Start Time của chatbot</label>
+        <select id="start-time-source" aria-describedby="start-time-help">
+          <option value="Requested time">Requested time — khách gửi yêu cầu (SBI xác nhận)</option>
+          <option value="First response time">First response time — trả lời đầu tiên</option>
+          <option value="Assign time">Assign time — giao cho nhân viên</option>
+          <option value="custom" disabled>Ánh xạ tuỳ chỉnh trong JSON</option>
+        </select>
+      </div>
+      <p class="hint" id="start-time-help">
+        SBI đã thống nhất Start Time lấy Requested time, không đổi theo từng bản làm tay.
+        Lựa chọn này được lưu và áp dụng sau khi bấm Xử lý, không tự đổi theo ngày.
+        Ngày báo cáo tự động vẫn nhận theo First response time.
       </p>
       <div class="row" style="margin-bottom:10px">
         <button id="btn-cfg-save" class="primary sm">Lưu</button>

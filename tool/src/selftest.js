@@ -32,9 +32,11 @@
     var y = eol(P.cellToString(b)).trim();
     if (x === y) return true;
     /* số: so theo giá trị để 8 và 8.0000000001 do làm tròn nhị phân không bị coi là lệch */
-    var nx = parseFloat(x), ny = parseFloat(y);
-    if (!isNaN(nx) && !isNaN(ny) && x !== '' && y !== '') {
-      return Math.abs(nx - ny) < 1e-9 || (Math.abs(ny) > 0 && Math.abs((nx - ny) / ny) < 1e-9);
+    /* Không parseFloat chuỗi: "3. Chủ đề A" và "3. Chủ đề B" KHÔNG bằng nhau;
+       ID dài cũng phải so từng ký tự. Chỉ dung sai cho số thực trong ô số. */
+    if (typeof a === 'number' && typeof b === 'number' && isFinite(a) && isFinite(b)) {
+      if (Number.isInteger(a) && Number.isInteger(b)) return a === b;
+      return Math.abs(a - b) < 1e-9 || (Math.abs(b) > 0 && Math.abs((a - b) / b) < 1e-9);
     }
     return false;
   }
@@ -292,7 +294,9 @@
     var ops = (files.ops || []).map(function (f) {
       return Pipeline.processOpFile(f.wb, cfg, serial, f.name);
     });
-    var blocks = Pipeline.buildBlocks({ session: session, ccvn: ccvn, ops: ops }, cfg, serial);
+    var mail = files.master ? Pipeline.inspectMailSf(files.master.wb, cfg, []) : null;
+    var blocks = Pipeline.buildBlocks({ session: session, ccvn: ccvn, ops: ops,
+      emailTable: mail && mail.table }, cfg, serial);
 
     if (files.master) {
       checks.push(compareBlock('4. Khối 1 so với "1. CSKH" của file tổng',
@@ -316,8 +320,7 @@
    * Cột G của "2. SF Case info" là công thức VLOOKUP. So email tool tra được với
    * giá trị Excel đã tính sẵn trong file — chứ không so tool với chính bảng của tool.
    *
-   * Lệch chỉ được chấp nhận ở tên bị TRÙNG trong `mail SF`: chỗ đó giá trị cache trong
-   * file là kết quả cũ chưa tính lại, còn VLOOKUP luôn lấy dòng khớp đầu tiên.
+   * Hai tài khoản chỉ khác hậu tố/số vẫn là hai email khác nhau.
    */
   function checkEmails(block2, masterWb, cfg) {
     var ws = masterWb.Sheets[cfg.targets.sfcase.sheet];
@@ -326,27 +329,17 @@
     var m = P.sheetToMatrix(ws);
     var a0 = XLSX.utils.decode_cell(cfg.targets.sfcase.anchor);
 
-    function stem(mail) { return mail.split('@')[0].replace(/\d+$/, ''); }
-
-    var bad = [], staleRows = 0, checked = 0;
+    var bad = [], checked = 0;
     block2.rows.forEach(function (row, i) {
       var fileVal = P.cellToString((m.rows[a0.r + i] || [])[a0.c + 5]).trim();
       if (!fileVal) return;
       checked++;
       var got = P.cellToString(row[5]).trim();
       if (got === fileVal) return;
-      /* cùng một người, chỉ khác hậu tố số -> file đang giữ cache cũ của tên trùng */
-      if (got && stem(got) === stem(fileVal)) { staleRows++; return; }
-      if (bad.length < MAX_SHOW) {
-        bad.push('dòng ' + (a0.r + i + 1) + ' "' + row[4] + '": tool=' + got + ' file=' + fileVal);
-      }
+      bad.push('dòng ' + (a0.r + i + 1) + ' "' + row[4] + '": tool=' + got + ' file=' + fileVal);
     });
 
     var detail = 'Đối chiếu ' + checked + ' ô với cột email có sẵn trong file tổng';
-    if (staleRows) {
-      detail += '; ' + staleRows + ' ô lệch do `mail SF` có tên trùng — file giữ cache cũ, ' +
-        'VLOOKUP tính lại sẽ ra đúng như tool';
-    }
     return bad.length === 0 ? pass('5b. Cột email so với file tổng', detail)
                             : fail('5b. Cột email so với file tổng', bad.length + ' ô lệch thật', bad);
   }
@@ -370,8 +363,8 @@
   /**
    * So một vùng khối giữa 2 workbook.
    *
-   * `opts.explain(i, c, av, bv, rowA, rowB)` trả về lý do nếu ô lệch đó đã truy được
-   * nguyên nhân nằm ngoài tool — khi đó vẫn hiện ra để soát nhưng không tính là lỗi.
+   * `opts.explain(i, c, av, bv, rowA, rowB)` bổ sung chẩn đoán cho ô lệch;
+   * ô đó vẫn tính là lệch, không suy đoán rằng bản chuẩn sai.
    * Kết quả gom theo CỘT: biết "127 ô lệch, toàn bộ ở cột Case Status" thì đọc được
    * ngay, chứ một con số 146 trần trụi thì không nói lên điều gì.
    */
@@ -383,31 +376,34 @@
     var a0 = XLSX.utils.decode_cell(block.anchor);
     var nCol = block.headers.length;
 
-    var byCol = {}, cells = 0, stale = 0, nBad = 0;
-    var explained = [], explainCount = 0;
-    function stem(s) { return s.split('@')[0].replace(/\d+$/, ''); }
+    var byCol = {}, cells = 0, nBad = 0;
+    function dataLength(matrix) {
+      var last = -1;
+      for (var r = a0.r; r < matrix.rows.length; r++) {
+        var row = matrix.rows[r] || [];
+        for (var c = 0; c < nCol; c++) {
+          if (!P.isBlank(row[a0.c + c])) { last = r; break; }
+        }
+      }
+      return last < a0.r ? 0 : last - a0.r + 1;
+    }
+    var countA = dataLength(ma), countB = dataLength(mb);
+    var limit = Math.max(countA, countB, block.rows.length);
     /* đọc ô theo chỉ số cột CỦA KHỐI (0..nCol-1), không phải chỉ số cột của sheet */
     function colOf(row) { return function (c) { return row[a0.c + c]; }; }
-    for (var i = 0; i < block.rows.length; i++) {
+    for (var i = 0; i < limit; i++) {
       var rowA = ma.rows[a0.r + i] || [], rowB = mb.rows[a0.r + i] || [];
       for (var c = 0; c < nCol; c++) {
         var av = rowA[a0.c + c], bv = rowB[a0.c + c];
         cells++;
         if (same(av, bv)) continue;
-        /* cột email: bản đúng có thể giữ cache VLOOKUP cũ của tên trùng */
-        if (opts.emailCol === c) {
-          var sa = P.cellToString(av).trim(), sb = P.cellToString(bv).trim();
-          if (sa && sb && stem(sa) === stem(sb)) { stale++; continue; }
-        }
         var line = addr(a0.r + i, a0.c + c) + ': tool=' +
           JSON.stringify(P.cellToString(av).slice(0, 30)) + ' chuẩn=' +
           JSON.stringify(P.cellToString(bv).slice(0, 30));
+        var sourceNote = opts.describe ? opts.describe(i, c, av, bv) : null;
+        if (sourceNote) line += ' — ' + sourceNote;
         var why = opts.explain ? opts.explain(i, c, av, bv, colOf(rowA), colOf(rowB)) : null;
-        if (why) {
-          explainCount++;
-          if (explained.length < MAX_SHOW) explained.push(line + ' — ' + why);
-          continue;
-        }
+        if (why) line += ' — ' + why;
         nBad++;
         var d = byCol[c] || (byCol[c] = { header: block.headers[c] || ('cột ' + (c + 1)),
                                           count: 0, samples: [] });
@@ -416,28 +412,28 @@
       }
     }
 
-    var detail = 'So ' + cells + ' ô (' + block.rows.length + ' dòng × ' + nCol + ' cột)' +
-      (stale ? '; bỏ qua ' + stale + ' ô email do bản chuẩn giữ cache cũ' : '') +
-      (explainCount ? '; ' + explainCount + ' ô lệch đã truy được nguyên nhân (không phải lỗi tool)' : '');
-    if (!nBad) return pass(name, detail + (explainCount ? '' : ' — khớp hết'), explained);
+    var detail = 'So ' + cells + ' ô (' + limit + ' dòng × ' + nCol + ' cột)' +
+      (countA !== countB ? '; tool ' + countA + ' dòng, bản chuẩn ' + countB + ' dòng' : '');
+    if (!nBad) return pass(name, detail + ' — khớp hết');
 
     var cols = Object.keys(byCol).map(Number).sort(function (x, y) {
       return byCol[y].count - byCol[x].count;
     });
     var lines = [];
+    if (countA !== countB) lines.push('Số dòng không khớp: tool ' + countA + ', bản chuẩn ' + countB +
+      '. Đã so cả phần dòng thừa/thiếu, không chỉ phần giao nhau.');
     cols.forEach(function (c) {
       lines.push('▸ ' + byCol[c].header + ': ' + byCol[c].count + ' ô');
       byCol[c].samples.forEach(function (s) { lines.push('    ' + s); });
     });
-    return fail(name, nBad + ' ô lệch ở ' + cols.length + ' cột — ' + detail,
-                lines.concat(explained));
+    var result = fail(name, nBad + ' ô lệch ở ' + cols.length + ' cột — ' + detail);
+    result.mismatches = lines; /* Mỗi cột chỉ 3 ví dụ nhưng phải hiện đủ mọi cột. */
+    return result;
   }
 
   /**
-   * Lệch do chính luật `requestedByAliases` của tool: tool đổi tên còn bản chuẩn
-   * thì không (người làm quên áp dụng hôm đó, hoặc sửa tay rồi bỏ dở giữa chừng —
-   * cả hai trường hợp đều đã gặp trong dữ liệu thật).
-   * Ô email của đúng dòng ấy lệch theo, nên cũng tính là đã giải thích.
+   * Nhận diện lệch do alias để chẩn đoán. Không miễn trừ ô lệch và không suy đoán
+   * rằng người làm bản chuẩn quên đổi tên.
    */
   function aliasExplainer(cfg, nameCol, emailCol) {
     var aliases = (cfg.ccvn && cfg.ccvn.requestedByAliases) || cfg.requestedByAliases;
@@ -460,14 +456,13 @@
       if (c !== nameCol && c !== emailCol) return null;
       /* ô email lệch là hệ quả của ô tên cùng dòng, nên luôn xét theo cột tên */
       var base = isAliasPair(getA(nameCol), getB(nameCol));
-      return base ? 'bản chuẩn không đổi tên "' + base + '" ở dòng này (luật `requestedByAliases`)' : null;
+      return base ? 'khác bản chuẩn do luật requestedByAliases của "' + base + '"; cần xác nhận phân công' : null;
     };
   }
 
   /**
    * So cột ngày của một sheet tổng hợp, chỉ ở những dòng tool có ghi.
-   * `excuse(row)` trả về lý do nếu chênh lệch ở dòng đó đã truy được nguyên nhân
-   * nằm ngoài tool — khi đó tính là "đã giải thích" chứ không phải lỗi.
+   * `excuse(row)` bổ sung bằng chứng chẩn đoán, KHÔNG miễn trừ ô lệch.
    */
   function diffDayColumn(name, outWb, refWb, sheetName, headerRow, serial, rows, excuse) {
     var a = outWb.Sheets[sheetName], b = refWb.Sheets[sheetName];
@@ -479,7 +474,7 @@
     });
     if (col === -1) return fail(name, 'Không tìm thấy cột ngày ' + serial);
 
-    var mism = [], explained = [];
+    var mism = [];
     rows.forEach(function (r) {
       var av = (ma.rows[r - 1] || [])[col];
       var bv = (mb.rows[r - 1] || [])[col];
@@ -487,19 +482,14 @@
       var line = 'dòng ' + r + ': tool=' + JSON.stringify(P.cellToString(av).slice(0, 22)) +
         ' chuẩn=' + JSON.stringify(P.cellToString(bv).slice(0, 22));
       var why = excuse ? excuse(r) : null;
-      if (why) explained.push(line + ' — ' + why);
-      else mism.push(line);
+      /* Gợi ý nguyên nhân không chứng minh rằng số lệch là đúng: vẫn báo lệch. */
+      mism.push(line + (why ? ' — ' + why : ''));
     });
 
     var detail = 'So ' + rows.length + ' ô ở cột ngày ' + serial;
-    if (explained.length) {
-      detail += '; ' + explained.length + ' ô lệch đã truy được nguyên nhân (không phải lỗi tool)';
-    } else if (!mism.length) {
-      detail += ' — khớp hết';
-    }
-    return mism.length === 0 ? pass(name, detail, explained)
-                             : fail(name, mism.length + '/' + rows.length + ' ô lệch — ' + detail,
-                                    mism.concat(explained));
+    if (!mism.length) detail += ' — khớp hết';
+    return mism.length === 0 ? pass(name, detail)
+                             : fail(name, mism.length + '/' + rows.length + ' ô lệch — ' + detail, mism);
   }
 
   /**
@@ -507,20 +497,54 @@
    * Chỉ so những chỗ tool THỰC SỰ ghi — các ô nhập tay không tính.
    */
   function compareWithReference(outBytes, refWb, blocks, cfg, opts) {
+    opts = opts || {};
+    var input = opts.input || {};
     var checks = [];
     var outWb = XLSX.read(outBytes, { type: 'array', cellFormula: false, cellHTML: false,
                                       cellDates: false, cellNF: false, cellText: false });
 
-    checks.push(diffBlock('1. Sheet "1. CSKH"', outWb, refWb, blocks.block1));
-    if (blocks.block2.rows.length) {
+    checks.push(diffBlock('1. Sheet "1. CSKH"', outWb, refWb, blocks.block1, {
+      describe: function (i, c, av) {
+        var session = input.session;
+        if (c === 5 && session && i < session.staging.rows.length &&
+            cfg.session.stagingColumns[3].from === 'Requested time' && same(av, session.staging.rows[i][3])) {
+          return 'Start Time theo Requested time, đúng thống nhất SBI; không đổi về mốc của bản làm tay cũ';
+        }
+        if (c === 7 && same(av, (blocks.block1.rows[i] || [])[c])) {
+          return 'ghi chú tình trạng hỗ trợ không bắt buộc theo SBI; tool giữ nội dung nguồn, không tự xóa để khớp bản làm tay';
+        }
+        return null;
+      }
+    }));
+    {
       /* cột 4 = Requested By, cột 5 = Supporter email (tính từ ô neo B7) */
       checks.push(diffBlock('2. Sheet "2. SF Case info"', outWb, refWb, blocks.block2, {
         emailCol: 5,
-        explain: aliasExplainer(cfg, 4, 5)
+        explain: aliasExplainer(cfg, 4, 5),
+        describe: function (i, c, av) {
+          var source = input.ccvn;
+          if (!source || !source.dataRows[i] || c >= cfg.ccvn.caseColumns.length) return null;
+          var col = P.findColumn(source.headers, cfg.ccvn.caseColumns[c].from);
+          return col >= 0 && same(av, source.dataRows[i][col])
+            ? 'giá trị tool khớp export Salesforce đang nạp; export và bản chuẩn khác nhau' : null;
+        }
       }));
     }
-    if (blocks.block3.rows.length) {
-      checks.push(diffBlock('3. Sheet "3. Other Tasks"', outWb, refWb, blocks.block3));
+    {
+      var sourceHours = [];
+      (input.ops || []).forEach(function (op) {
+        op.other.rows.forEach(function (rec) { sourceHours.push({ rec: rec, file: op.fileName }); });
+      });
+      checks.push(diffBlock('3. Sheet "3. Other Tasks"', outWb, refWb, blocks.block3, {
+        describe: function (i, c, av) {
+          var source = sourceHours[i];
+          if (!source || c < 2) return null;
+          var col = cfg.op.other.copyColumns[c];
+          if (col === undefined && c === 10) col = 12;
+          if (col === undefined || !same(av, source.rec.cells[col])) return null;
+          return 'khớp file OP ' + source.file + ', ô ' + addr(source.rec.excelRow - 1, col);
+        }
+      }));
     }
 
     if (cfg.summary && blocks.summary) {
@@ -529,7 +553,9 @@
         /* dòng fanpage: chỉ so những dòng lần chạy này thực sự ghi */
         .concat((opts && opts.fanpageRows) || []);
       checks.push(diffDayColumn('4. Cột ngày "' + cfg.summary.sheet + '"', outWb, refWb,
-        cfg.summary.sheet, cfg.summary.dayHeaderRow, blocks.reportSerial, sumRows));
+        cfg.summary.sheet, cfg.summary.dayHeaderRow, blocks.reportSerial, sumRows, function (r) {
+          return r === 14 ? 'Viber được đếm từ Viber T và Viber L trong CSKH; kiểm tra công thức tổng hợp của bản làm tay' : null;
+        }));
     }
 
     if (cfg.kpi && blocks.kpi) {
@@ -554,26 +580,23 @@
         used.forEach(function (e) { rowEmail[mRows[e]] = e; });
         if (cfg.kpi.monthly.teamRow) wrote.push(cfg.kpi.monthly.teamRow);
 
-        /* Người có tên bị trùng trong `mail SF` thì bản chuẩn đang giữ số case cũ,
-           nên hiệu suất lệch là do bản chuẩn chứ không phải tool. Dòng tổng team
-           cộng dồn cả nhóm nên cũng bị kéo theo. */
+        /* Nêu dấu hiệu để kiểm tra, không suy đoán rằng bản chuẩn sai. */
         var affected = (opts && opts.affectedEmails) || {};
-        var anyAffected = used.some(function (e) { return affected[e]; });
         var excuse = function (r) {
           if (cfg.kpi.monthly.teamRow && r === cfg.kpi.monthly.teamRow) {
-            return anyAffected ? 'dòng tổng, bị kéo theo bởi người có tên trùng trong `mail SF`' : null;
+            return 'dòng tổng cần đối chiếu số case và giờ làm của toàn bộ nhóm OP';
           }
           var e = rowEmail[r];
           if (!e) return null;
           if (affected[e]) {
-            return '`mail SF` có tên trùng nên bản chuẩn giữ số case cũ (' + e + ')';
+            return '`mail SF` có tên trùng (' + e + '); chưa đủ căn cứ kết luận nguyên nhân KPI lệch';
           }
           /* Hiệu suất = tổng-việc / tổng-giờ. Người có việc mà file OP không có khối
              giờ của họ thì mẫu số = 0, buộc phải ra 0 — nguồn thiếu, không phải tool sai. */
           var k = blocks.kpi && blocks.kpi.forEmail(e);
           if (k && !k.hours && k.hasWork) {
-            return 'file OP không có khối giờ của ' + e + ' trong ngày này nên hiệu suất ' +
-                   'buộc ra 0 (bản chuẩn có số vì được nhập tay từ nguồn khác)';
+            return 'dữ liệu đang nạp không có giờ KPI của ' + e +
+                   '; cần bổ sung giờ làm, chưa xác minh được KPI của bản chuẩn';
           }
           return null;
         };

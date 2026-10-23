@@ -1,5 +1,468 @@
 # Tool ánh xạ báo cáo ngày — CCVN / Altius Link VN
 
+Xem [Luồng tính toán báo cáo](LUONG-TINH-TOAN.md) để biết nguồn của từng cột,
+cách tính tổng hợp, giờ G–K, KPI cá nhân/nhóm và ví dụ cụ thể từ DataQuyTac.
+
+## Quy tắc hiện hành theo xác nhận SBI ngày 23/10/2026
+
+**Phiên bản 6** ưu tiên kết luận trong [VẤN ĐỀ.docx](<../docs/VẤN ĐỀ.docx>).
+Phần không thay đổi tiếp tục theo DataQuyTac; không sửa file nguồn và không chép
+output làm đáp án. [Luồng tính toán](LUONG-TINH-TOAN.md) đã được cập nhật tương ứng.
+
+| Nội dung SBI chốt | Tool xử lý |
+|---|---|
+| Start Time là lúc khách gửi yêu cầu | Mặc định lấy `Requested time`; nâng cấu hình cũ sang nguồn này |
+| Tài khoản chung gán tên ai thì tính cho người đó | Tính toàn bộ case cho tên được gán, không chia đôi hoặc chia theo thứ tự dòng; không chuyển giờ theo case |
+| CC-VN là tài khoản mượn | Chưa biết người dùng thì cảnh báo và để trống email; chỉ gán sau khi xác nhận, không mặc định luôn là Thủy |
+| Quên sửa ngày khi copy | Chỉ thêm vị trí dòng giờ ngày khác để kiểm tra; không tự kéo giờ sang ngày báo cáo |
+| Giờ làm tròn khác nhau do làm tay | Giữ số giờ nguồn, không tự làm tròn; ngoại lệ Cúc ngày 11/10 vẫn tắt |
+| Nguyên nhập sai giờ ngày 12/10 | Cảnh báo tại G2001 nếu nguồn còn là 5; hiển thị số 5,24 trong bản đối chiếu để kiểm tra, không tự thay |
+| Ghi chú “ok” có thể có hoặc không | Giữ nội dung nguồn; không xóa để khớp bản tay |
+| Chủ đề “Đánh giá khách hàng” về cơ bản không chọn | Cảnh báo và tô vàng ô chủ đề trong Session/OP; không tự đổi sang chủ đề khác |
+| Tổng hợp Viber bị lệch do công thức bản tay | Đếm từ chi tiết Viber T/L; ngày 12/10 có 1 dòng thì tổng hợp là 1 |
+
+Khi chủ tài khoản có giờ nhưng case được gán sang người khác, tool giải thích
+**case và giờ đang tính cho hai người**, không kết luận luật gán sai chỉ từ việc có giờ.
+Bảng gán Quỳnh → Phương Anh, Quang → Thảo Nguyên đang giữ từ DataQuyTac; cần cập nhật
+nếu phân công ngày đang làm khác. SBI xác nhận cách tính theo tên đã gán, không xác nhận
+các cặp này bất biến. Tên trùng Khánh Ly vẫn cảnh báo để xác nhận email nhận case.
+
+### Cảnh báo lỗi nhập liệu
+
+Ngày 12/10, các cảnh báo mới chỉ tới:
+
+- `Session Report-0!O1070`: chọn Đánh giá khách hàng; giữ nguồn đến khi được sửa.
+- `3. Other Tasks & Working time!G2001`: giờ hỗ trợ Nguyên còn là 5. Cảnh báo khóa theo
+  ngày, email, cột và giá trị; không coi mọi ô 5 giờ là sai.
+- `C2017:C2024`: giờ Đào đang ghi 11/10. SBI xác nhận khối này quên đổi ngày.
+  Tool cũng chỉ khối lịch sử gần nhất `C1881:C1888`; không được sửa khối lịch sử đó
+  chỉ vì cùng email. Cảnh báo ngày là gợi ý để xác minh, không tự sửa ngày.
+- 11 case `CC-VN`: cần xác nhận người mượn tài khoản. Công thức tra email đã được
+  bảo vệ bằng `IFERROR`, nên mở Excel tính lại vẫn trống thay vì sinh `#N/A`.
+
+Một số nhập sai nhưng vẫn là số hợp lệ không thể tự nhận ra nếu chưa có căn cứ.
+Tool không tự bù 5 thành 5,24, không chuyển giờ giữa người hoặc ngày, không tự sửa topic.
+File tô vàng vẫn giữ giá trị, công thức và định dạng nguồn; cảnh báo nêu việc cần làm.
+
+### Cập nhật và kiểm thử phiên bản 6
+
+Tải lại `index.html` bằng **Ctrl+F5**, rồi bấm **Xử lý**. Cấu hình phiên bản 5 trở xuống
+được nâng lên `rulesVersion: 6`, đổi Start Time đã lưu sang Requested time và tắt
+ngoại lệ cũ ngày 11/10. Các bảng gán tùy chỉnh không bị thay bằng tên khác.
+Sau khi đã nâng v6, lựa chọn Start Time mới do người dùng chủ động đặt vẫn được giữ,
+nhưng có cảnh báo nếu khác Requested time. Ngày báo cáo tự động vẫn nhận theo
+First response time; giờ KPI vẫn lấy từ OP, không tính từ thời lượng chat.
+
+Kiểm thử trên dữ liệu thật ngày 12/10:
+
+- **1.604/1.604 Start Time** lấy Requested time và khớp bản tay ngày này.
+- CSKH còn 30 ô khác bản tay: 29 ghi chú “ok” được giữ và 1 chủ đề nguồn đang cảnh báo.
+- Viber bằng 1; giờ Nguyên vẫn 5; giờ Đào ghi ngày 11 không bị tự chuyển sang ngày 12.
+- Kiểm tra trình duyệt với cả ngày 12/10 và DataQuyTac: cảnh báo có địa chỉ ô,
+  nút tải tô vàng và dữ liệu trong bản tô vàng được giữ nguyên.
+- Excel thật refresh Pivot, tính lại: **33.118 ô khớp kết quả dự kiến từ nguồn và
+  quy tắc hiện tại**, 344 ô phụ dư trống. Đây không phải số ô khớp toàn bộ output tay.
+- Lịch sử ngày trước và cả 7 trường lọc Pivot vẫn được giữ đúng.
+
+Các chênh lệch tên/email, giờ chưa sửa và chủ đề chưa sửa **vẫn được báo lệch** khi
+đối chiếu; không đổi thành ĐẠT chỉ vì đã giải thích được nguyên nhân.
+
+```powershell
+node tool/tests/sbi-rules.cjs
+node tool/tests/dataquytac.cjs
+node tool/tests/app-config.cjs
+node tool/tests/app-warnings.cjs
+node tool/tests/browser-warnings.cjs
+node tool/tests/browser-warnings.cjs --dataquytac
+powershell -NoProfile -ExecutionPolicy Bypass -File tool/tests/verify-october11.ps1 -ReportFile SBI-v6-20261012.xlsx -ExpectedFile sbi-v6-excel-expected.json -Label SBI-v6-October12
+```
+
+File kiểm thử: `tool/tests/artifacts/SBI-v6-20261012.xlsx`, còn cảnh báo dữ liệu cần
+xử lý trước khi gửi. Output cũ DataQuyTac dùng First response time nên nay có 1.555
+ô Start Time khác theo quy chuẩn mới; 22 chỉ tiêu tổng hợp và 128 dòng giờ có nguồn
+vẫn khớp. Kiểm thử kiểm tra riêng thay đổi có chủ đích này, không bỏ qua ô lệch.
+
+## Lịch sử đối chiếu DataQuyTac phiên bản 5
+
+Mục này lưu kết quả trước xác nhận SBI. Các quy tắc và số ô khớp dưới đây là của v5;
+phần mâu thuẫn, đặc biệt Start Time và cách chia case làm tay, đã được thay bằng v6 ở trên.
+
+Theo yêu cầu mới, **DataQuyTac được ưu tiên khi có xung đột với các bộ tháng 09,
+11/10 hoặc 12/10 đã kiểm tra trước đây**. Bộ này chứa dữ liệu ngày **13/09/2026**,
+gồm ba file thô, hai file đã xử lý và một báo cáo tổng chuẩn. Tool không đọc
+output chuẩn để chép đáp án vào kết quả; output chỉ dùng trong kiểm thử.
+
+| Phần xử lý | Quy tắc đang áp dụng | Căn cứ trong bộ mới |
+|---|---|---|
+| Session | Loại dòng lỗi bot; Start Time mặc định lấy First response time; giữ nguyên ID dạng chữ | Bỏ 12/1.567 dòng; 1.555 dòng còn lại và sheet staging khớp file đã xử lý |
+| Salesforce | Bỏ cột rỗng; giữ trạng thái, ngày giờ và nội dung từ export | 379 case trong file thô và file đã xử lý không thay đổi nội dung |
+| Người nhận case | Quỳnh → Phương Anh; Quang → Thảo Nguyên; Hoài giữ nguyên | Mỗi cặp đổi tên khớp 19/19 case; 6/6 case Hoài giữ nguyên |
+| Khánh Ly | Giữ tên và bảng email; tra dòng đầu theo VLOOKUP, kèm cảnh báo chưa xác nhận phân công | Cùng một tên nhưng chuẩn chia 40 case cho ly.ntk và 22 case cho ly.ntk1; nguồn không có khóa để chia |
+| Giờ làm | Lấy đúng dữ liệu OP, tính F bằng SUM(G:M) của khối 8 dòng; không làm tròn hay bù giờ | 128 dòng có trong nguồn khớp chuẩn sau chuẩn hóa cách hiển thị |
+| Cột M — giờ việc khác | Số 0 hiển thị thành ô trống, không đổi tổng; các cột giờ khác không bị xóa số 0 | M2026, M2028, M2029 ở OP là 0; tương ứng M96, M98, M99 ở chuẩn để trống |
+| Ngoại lệ riêng ngày 11/10 | Tắt mặc định năm phân công Quỳnh → Đào và một điều chỉnh giờ Cúc | Không mang ngoại lệ của bộ cũ sang quy chuẩn mới |
+
+Đây là quy chuẩn làm việc theo bộ bạn chọn, **không phải bằng chứng rằng phân công
+của hai tài khoản sẽ luôn cố định trong tương lai**. Mỗi lần áp dụng đổi người nhận,
+tool vẫn ghi rõ số case và tên trước/sau trong phần chi tiết. Nếu phân công thay đổi,
+cần cập nhật luật hoặc bổ sung bảng phân công theo mã case.
+
+### Kết quả đối chiếu và dữ liệu còn thiếu
+
+| Phạm vi | Kết quả với cấu hình mặc định mới |
+|---|---|
+| Hai file đã xử lý | 51.528 ô được so, khớp giá trị, kể cả metadata và sheet staging |
+| 1. CSKH | 31.052/31.052 ô khớp |
+| 2. SF Case info | Còn 22 ô email Khánh Ly khác chuẩn; 38 case Quỳnh/Quang đã khớp tên/email |
+| 3. Other Tasks | 128 dòng có nguồn khớp; thiếu 24 dòng của 3 người, tương ứng 81 ô khác chuẩn |
+| Summarize_team VietNam | 22/22 chỉ tiêu tool tự tính khớp |
+| KPI tháng | 34/39 ô khớp; 5 ô còn khác liên quan phân công Khánh Ly, giờ thiếu và tổng nhóm |
+| Lịch sử | 792 ô quản lý ở 12 ngày trước không đổi; kiểm tra thêm 3.120 giá trị/công thức lịch sử đều giữ nguyên |
+| Pivot | Cả 7 trường lọc nhận ngày mới |
+
+**Theo lựa chọn của bạn: giữ dữ liệu nguồn và cảnh báo, không tự bù theo output.**
+Để giải quyết phần còn lệch, cần bổ sung:
+
+- Bảng **mã case → email người xử lý** cho Khánh Ly. Không đổi tất cả 62 case sang
+  `ly.ntk1@altius-link.com.vn`, không tách theo vị trí dòng và không tự thêm tên “(3M)”.
+- Bảng giờ đúng ngày cho `ly.ntk1@altius-link.com.vn`, `nguyen.nt@altius-link.com.vn`
+  và `anh.np@altius-link.com.vn`. File OP không có ba email này; không tự điền
+  7 giờ hỗ trợ + 1 giờ khác dù output có mẫu đó.
+
+Giao diện thực tế báo **6 người có công việc nhưng chưa có giờ KPI hợp lệ**,
+bao gồm ba người trên, Hoài, Nguyễn Quang Huy và Đinh Thị Quỳnh Như. Ba người sau
+cũng có KPI bằng 0 trong chuẩn, nên không làm tăng số ô KPI lệch nhưng vẫn cần cảnh báo.
+Tên trùng có bảng riêng liệt kê cả hai email và vị trí `mail SF!C34`, `C43`.
+Các sai khác chưa giải quyết vẫn hiện **LỖI** khi đối chiếu, không được đổi thành ĐẠT.
+
+### Cập nhật cấu hình và kiểm thử
+
+Tải lại `index.html` bằng **Ctrl+F5**, rồi bấm **Xử lý**. Cấu hình cũ được nâng lên
+`rulesVersion: 5`, `rulesSource: "DataQuyTac"`: bật hai alias đã xác nhận, tắt các
+ngoại lệ ngày 11/10 và bỏ luật tự đổi tên Khánh Ly. Danh sách ngoại lệ cũ đã lưu
+được giữ để tra cứu nhưng không còn chạy. Tên đích tùy chỉnh khác, nguồn Start Time
+đã chủ động chọn và lựa chọn ngày đảo từ bản v3 trở lên vẫn được giữ. Muốn dùng đúng
+toàn bộ mặc định mới, chọn **Khôi phục mặc định**. Các luật tự tắt trong v5 không tự bật lại.
+
+```powershell
+node tool/tests/dataquytac.cjs
+node tool/tests/dataquytac-audit.cjs
+node tool/tests/app-config.cjs
+node tool/tests/app-warnings.cjs
+node tool/tests/browser-warnings.cjs --dataquytac
+powershell -NoProfile -ExecutionPolicy Bypass -File tool/tests/verify-october11.ps1 -ReportFile DataQuyTac-20260913.xlsx -ExpectedFile dataquytac-excel-expected.json -Label DataQuyTac-v5
+```
+
+`DataQuyTac` không có file nền ngày trước, nên kiểm thử dùng file ngày 12/09 ở
+`Data/test/`, không dùng output ngày 13 làm nền. File thử xuất:
+`tool/tests/artifacts/DataQuyTac-20260913.xlsx`; còn thiếu dữ liệu như bảng trên,
+**không phải bản hoàn thiện để gửi báo cáo**. Excel thật đã refresh Pivot và tính lại:
+35.174 ô khớp giá trị dự kiến từ nguồn; 38 KPI cá nhân và tổng nhóm nhất quán với
+tool; 344 ô phụ dư giữ trống. Đây không phải tuyên bố khớp 100% output chuẩn.
+
+Các bài `october11.cjs`, `october12.cjs`, `chain14.cjs`, `chain15.cjs` kiểm tra hồi quy
+với **cấu hình nghiệp vụ v4 được khai báo riêng trong tests/fixtures**, để tiếp tục
+kiểm tra cơ chế xuất Excel, tính giờ, lịch sử và xử lý ngoại lệ cũ. Chúng không chứng
+minh mặc định v5 khớp output cũ. Kiểm thử mặc định v5 là `dataquytac.cjs`, kiểm thử
+giao diện, cùng `october.cjs`. Các kết luận lịch sử bên dưới chỉ còn áp dụng nếu
+không xung đột với mục DataQuyTac này.
+
+## Cảnh báo dữ liệu và tải file tô vàng
+
+- Cột **Nội dung ô trong file gốc** hiển thị theo định dạng của ô nguồn: ngày
+  `13/09/2026` không còn hiện thành `46278`; số `0.00` giữ cách hiển thị `0.00`.
+  Đây chỉ là nội dung để tìm lại ô, không phải số tool yêu cầu bạn nhập vào.
+  Cảnh báo ngày đảo nói rõ ngày đang được đọc và ngày báo cáo, không dùng mã số ngày.
+- File tô vàng **giữ định dạng ngày/số, font, viền và căn lề của ô gốc**, chỉ đổi màu
+  nền. Đã sửa lỗi trước đây khiến ô ngày bị chuyển sang định dạng General và hiện
+  thành số `46xxx`. Để nhận bản sửa, tải lại trang, bấm Xử lý và tải lại file tô vàng.
+- Sheet `Loi can sua` có cột **Trạng thái**: “Cần kiểm tra” hoặc “Đã xử lý — xem ghi
+  chú”. Màu vàng không có nghĩa ô nào cũng sai hoặc cần bạn sửa; bảng chỉ rõ tool đã
+  làm gì và bạn cần kiểm tra gì. Đổi định dạng ngày không tự sửa ngày đã nhập nhầm.
+- Giữ các quy tắc xử lý đã kiểm chứng và những điều chỉnh riêng đã xác nhận trong
+  cấu hình. Không thêm ngoại lệ chỉ để ép khớp output, không tự đoán người nhận
+  case, đổi ngày hoặc bù giờ làm khi nguồn chưa đủ thông tin.
+- Khối cảnh báo nằm ngay dưới số liệu kết quả, có viền đỏ/vàng và số mục cần kiểm tra.
+  Mỗi mục hiện ngắn gọn vấn đề, ảnh hưởng và việc cần làm. Ví dụ: **“4 người chưa có
+  giờ làm hợp lệ”** — “KPI đang bằng 0 dù có công việc. Kiểm tra ngày, email và giờ
+  làm trong báo cáo nhân viên.”
+- Bấm **Xem chi tiết** để mở danh sách người, email và giải thích đầy đủ. Nếu có
+  địa chỉ ô nguồn, mục **Xem chi tiết và vị trí ô** giữ tên file, sheet và địa chỉ
+  từng ô. Chỉ thu gọn phần giải thích, không giấu cảnh báo hay thay đổi mức độ lỗi.
+  Ghi chú xử lý vẫn nằm riêng; quy tắc tính toán không thay đổi.
+- Trong chi tiết, **Ảnh hưởng** và **Cần làm** có khung màu, nhãn đậm riêng.
+  Danh sách người/email, tên trùng, số case, kênh chưa có nhóm và điều chỉnh đã áp
+  dụng được trình bày bằng bảng. Vị trí nguồn có bảng **Ô trong file gốc — Nội dung ô
+  trong file gốc — Tool xử lý / Bạn cần làm**; không cần rê chuột để đọc nội dung.
+  Bảng có tiêu đề cột cố định khi cuộn, phân biệt số `0` với ô trống và cuộn ngang
+  riêng trên màn hình nhỏ. Hiện đủ vị trí đã lưu thay vì chỉ 12 ô đầu; nếu vượt
+  giới hạn lưu của cảnh báo thì ghi rõ số vị trí đang hiển thị/tổng số. Phần giải
+  thích nguyên gốc vẫn giữ trong **Giải thích đầy đủ**.
+- Có việc nhưng không có giờ hợp lệ để tính KPI được cảnh báo ngay khi bấm
+  **Xử lý**, không phải đợi xuất file. Ví dụ ngày 12 có `dao.pt@altius-link.com.vn`:
+  KPI bằng 0 do thiếu giờ phù hợp, không có nghĩa là không làm việc. Tool không
+  tự lấy khối giờ ghi ngày 11 để bù. Khi chưa xác định được ô nguồn cần sửa,
+  cảnh báo nói rõ là không có vị trí tô vàng riêng.
+- Nút vàng **Tải file tô vàng** nằm **ngay sau khối cảnh báo**, trước ghi chú,
+  fanpage và phần xuất báo cáo. Mỗi file có nút riêng; bản sao giữ giá trị nguồn,
+  tô các vị trí được liệt kê và thêm sheet `Loi can sua` giải thích lý do.
+  Bao gồm cả ô đã chuẩn hóa tự động; không phải ô vàng nào cũng cần sửa.
+  File này **không phải báo cáo tổng đã xử lý**. Xác nhận dữ liệu, sửa nếu cần,
+  rồi nạp lại và bấm Xử lý. Nếu danh sách vị trí bị giới hạn, giao diện có thông báo.
+- Đổi file hoặc cấu hình sẽ khóa các nút tải kết quả cũ, kể cả nạp lại file trùng
+  tên. Cảnh báo fanpage cập nhật ngay khi sửa ô dán. Không có cảnh báo không có
+  nghĩa là đã xác nhận nguồn đầy đủ hoặc khớp 100% bản chuẩn.
+
+Kiểm thử giao diện: `node tool/tests/app-warnings.cjs`;
+kiểm thử định dạng cảnh báo và file tô vàng: `node tool/tests/warning-values.cjs`;
+kiểm thử bằng Chrome/Edge ẩn với dữ liệu ngày 12: `node tool/tests/browser-warnings.cjs`.
+Thử nghiệm trình duyệt dùng hồ sơ tạm riêng, kiểm tra cả giao diện sáng và màn hình
+390px nền tối; xác nhận 2.967 ô của bản Salesforce tô vàng giữ nguyên giá trị,
+kiểu dữ liệu và công thức. Các kiểm thử tính toán 04/10, 11/10, 12/10 và chuỗi
+13→14→15/09 vẫn đạt theo phạm vi và giới hạn được nêu bên dưới.
+
+## Lịch sử v4: sửa lỗi sau đối chiếu ngày 12/10/2026
+
+Các kết quả và luật đổi tên trong mục này mô tả bản v4, không phải mặc định v5.
+
+Đã sửa các lỗi xử lý có căn cứ; **không tự sửa dữ liệu nghiệp vụ để làm khớp bản chuẩn**.
+
+- **Giờ lưu dạng chữ:** chuyển chuỗi số đầy đủ trong cột G:K và M thành số trước
+  khi cộng giờ và tính KPI. Ví dụ OP `G1977 = "6.12"` của Cúc được xuất thành số
+  `6.12`; tổng giờ F94 là `8.002352941176472`, khớp F86 của bản chuẩn (khác thứ tự
+  nhân viên). Nhãn công việc cột L, email và ID không bị ép kiểu. Chuỗi như `6 giờ`,
+  `6,12`, `6:12` không bị đọc nhầm thành 6: giữ nguyên, cảnh báo và không cộng như số.
+- **Tổng KPI nhóm:** đọc phạm vi từ các công thức SUM số lượng/giờ trong file nền.
+  Mẫu tháng 09 dùng dòng 15–43; các mẫu tháng 10 đã kiểm tra dùng 15–42. Không còn
+  lấy cố định `kpi.daily.dataEndRow` làm nhóm. Người ngoài tổng nhóm vẫn được ghi KPI
+  cá nhân. Nếu các tổng dùng phạm vi khác nhau, công thức không được hỗ trợ, vượt
+  `peopleEndRow` hoặc email trong nhóm bị trùng, dừng xuất và yêu cầu kiểm tra mẫu
+  thay vì tự chọn một phạm vi. Hỗ trợ SUM các ô/vùng cùng cột, kể cả tham chiếu `$`.
+- **Tên người lập case:** tắt luật mặc định Quang → Nguyên. Cả 4 case Quang ngày 12
+  giữ đúng tên/email như chuẩn. Cấu hình cũ tự nâng lên `rulesVersion: 4`, chỉ tắt
+  đúng luật mặc định này; tên đích tùy chỉnh khác và các lựa chọn Start Time/ngày
+  đảo đã lưu được giữ lại. Cấu hình v4 do người dùng chủ động chỉnh vẫn được giữ.
+- **Nhất quán với Excel:** công thức tra số lượng ở Daily KPI trả **0** thay vì
+  chuỗi rỗng khi không tìm thấy. Điều này tránh mất phần hiệu suất chat khi người
+  đó chưa có case Salesforce được gán đúng tên. Ví dụ Thủy ngày 12 có 58 lượt hỗ trợ
+  trong phép tính, nhưng công thức cũ làm H22 rỗng vì F22 rỗng. Không tự gán 11 case
+  `CC-VN` cho Thủy; cảnh báo thiếu email vẫn còn. Giữ cấu trúc shared formula của mẫu.
+
+### Kiểm chứng và giới hạn
+
+- Ngày 12: giờ của Cúc, 4 tên/email Quang và phạm vi tổng nhóm đã được kiểm thử.
+  1.430 phép kiểm tra ô/công thức lịch sử không thay đổi. Mở file bằng Excel thật,
+  refresh Pivot và tính lại: **39 KPI cá nhân + 1 KPI nhóm khớp với số tool tính**.
+  Đây là kiểm tra nhất quán Excel/tool, **không phải 40 ô đều khớp bản chuẩn**.
+- Phép thử riêng dùng dữ liệu chi tiết của bản chuẩn tái tạo được **40/40 KPI chuẩn**.
+  File `chain12-reference-fixture.xlsx` chỉ dùng chẩn đoán công thức; không dùng nó
+  làm báo cáo thực tế và không đưa dữ liệu bản chuẩn vào luồng xuất thông thường.
+- Ngày 11 vẫn khớp 33.757 ô chi tiết, 22 ô tổng hợp và 40 ô KPI; các ngoại lệ riêng
+  đã xác nhận của ngày 11 vẫn giữ nguyên, không áp sang ngày 12.
+- Ngày 12 còn 60 ô SF lệch do 19 case Quỳnh/Đào và 11 case CC-VN/Thủy; 5/40 KPI
+  lệch do phân công và giờ đầu vào chưa khớp. Không tự sửa ngày 11 thành ngày 12
+  cho khối giờ Đào, không đổi giờ Nguyên 5 thành 5,24, không xóa 29 mô tả “ok” hay
+  đổi Topic. Bảng giờ khác thứ tự vẫn được bộ so ô báo lệch theo vị trí dòng.
+- Start Time mặc định vẫn là `First response time`; bản chuẩn ngày 12 dùng
+  `Requested time` cho 1.604 phiên. Có thể chọn nguồn này trong Cấu hình để tái lập
+  thời gian của ngày 12, nhưng tool không tự đổi theo ngày.
+
+Kiểm thử mới:
+
+```powershell
+node tool/tests/october12.cjs
+powershell -NoProfile -ExecutionPolicy Bypass -File tool/tests/verify-october12.ps1
+```
+
+Tải lại trang bằng **Ctrl+F5** rồi bấm **Xử lý** để dựng lại kết quả. File thử xuất từ
+nguồn thực tế là `tool/tests/artifacts/AltiuslinkVN-20261012.xlsx`; không sửa các file
+trong `ExtraData`. Các ghi chú 11/10 và tháng 09 bên dưới là lịch sử, ưu tiên mục này
+nếu có xung đột.
+
+## Lịch sử v3: cập nhật theo bộ chuẩn 11/10/2026
+
+Nguồn đối chiếu: `ExtraData/Daily Report 11.10.2026/Input` và `Output`.
+Đây là quyết định tại thời điểm v3; phần có xung đột nay được thay bằng DataQuyTac.
+Sáu ngoại lệ trong mục dưới đã tắt mặc định từ v5. Không sửa file nguồn.
+
+| Hạng mục | Quyết định và bằng chứng |
+|---|---|
+| Ngày trong OP | Bật mặc định nhận ngày/tháng bị đảo. Bộ mới có 86 dòng CSKH và 16 dòng giờ cần nhận thêm để khớp chuẩn. Luôn báo số dòng; có thể tắt checkbox nếu ngày đảo thực sự là một ngày khác trong nguồn. |
+| Người lập case Hoài | Giữ tên/email gốc: cả 12 case của Hoài trong chuẩn đều giữ nguyên. Tắt luật toàn bộ Hoài → Hương. |
+| Người lập case Quỳnh | Tắt luật toàn bộ Quỳnh → Anh. Trong 14 case của Quỳnh, chuẩn giữ 9 case và giao 5 case cho Phạm Thanh Đào. Không suy ra quy tắc phân ca từ vị trí dòng. |
+| Tổng giờ làm F | Tính lại `SUM(G:M)` của cả khối 8 dòng, đồng nhất cache với công thức Excel. Không chép tổng giờ tính sẵn đã cũ từ OP. Ví dụ F142 phải là `7.995294117647059`, không phải 8. |
+| Giờ xử lý case | Chỉ điều chỉnh giá trị đã được chuẩn xác nhận; không làm tròn toàn bộ giờ. I110 của Cúc là `0.94`, các số lẻ của người khác giữ nguyên. |
+| Bộ đối chiếu | Tên/email khác chuẩn vẫn báo lệch, kể cả khi do luật alias trong cấu hình; không miễn trừ tự động. |
+
+Tại lần đối chiếu 11/10, luật Quang → Nguyên chưa đổi vì thiếu bằng chứng;
+luật này đã được tắt sau đối chiếu 12/10 như mục đầu tài liệu.
+Start Time mặc định vẫn là `First response time`, khớp 1.399 phiên chatbot giữ lại.
+
+### Sáu điều chỉnh riêng, không phải quy tắc tổng quát
+
+Đầu vào hiện có chưa đủ để suy ra việc chia case Quỳnh/Đào hoặc lý do chỉ một ô giờ
+được làm tròn. Vì bạn yêu cầu ưu tiên output mới, cấu hình `approvedAdjustments`
+lưu rõ nguồn bằng chứng và các điều chỉnh sau, chỉ áp dụng ngày **2026-10-11**:
+
+- Năm Case Number chuyển từ `VU NHU QUYNH` sang `PHAM THANH DAO`:
+  `20261012218289`, `20261012218452`, `20261012218454`, `20261012218613`, `20261012218655`.
+- Khối giờ của `cuc.ht@altius-link.com.vn`: cột I, từ `0.941176470588235` thành `0.94`.
+  `column: 6` là chỉ số bắt đầu từ 0 trong khối C:M, không phải số cột Excel.
+
+Tool kiểm tra người lập/giá trị nguồn trước khi áp dụng, chặn khóa trùng hoặc dữ liệu
+không còn khớp, báo thiếu case/khối giờ thay vì tạo dữ liệu mới. Các điều chỉnh được
+ghi trong cảnh báo và log xuất file; không đọc file chuẩn trong luồng xử lý thực tế.
+Tắt bằng `approvedAdjustments.enabled: false` trong Cấu hình JSON; khi đó các sai khác
+nguồn tương ứng sẽ xuất hiện trở lại. Để áp dụng cho ngày khác cần bằng chứng phân công
+mới hoặc dữ liệu nguồn đã sửa, không tự nhân rộng sáu ngoại lệ này.
+
+Cấu hình trình duyệt cũ được nâng một lần lên `rulesVersion: 3`: tắt đúng hai alias
+mặc định cũ, bật nhận ngày đảo và bổ sung danh sách điều chỉnh. Các tên đích tự chỉnh
+khác được giữ lại. Sau khi nâng v3, lựa chọn tắt ngày đảo/điều chỉnh cũng được giữ nguyên.
+Tải lại trang bằng Ctrl+F5; kiểm tra Cấu hình nếu trước đây đã tự sửa luật.
+
+### Kết quả kiểm chứng bộ 11/10
+
+| Phạm vi | Kết quả |
+|---|---:|
+| 1. CSKH | Khớp 29.358 ô — 2.097 dòng × 14 cột |
+| 2. SF Case info | Khớp 2.639 ô — 377 dòng × 7 cột |
+| 3. Other Tasks & Working time | Khớp 1.760 ô — 160 dòng × 11 cột |
+| Summary ngày mới, phần tool quản lý | Khớp 22 ô |
+| KPI tháng ngày mới | Khớp 40 ô, gồm tổng team |
+| Lịch sử | 1.300 phép kiểm tra ô/công thức không đổi so với file nền |
+| Excel thật sau refresh Pivot và CalculateFullRebuild | Khớp 33.859 ô, gồm thêm 40 ô KPI ngày; 344 ô phụ dư Sheet5 vẫn trống |
+
+Kiểm thử còn kiểm tra đảo thứ tự case, tắt điều chỉnh, đổi ngày báo cáo, khóa trùng,
+nguồn không khớp, nâng cấu hình và không sửa dữ liệu đầu vào trong bộ nhớ.
+Đây là kết quả cho các vùng đã nêu, **không phải cam kết toàn bộ mọi ô/mọi ngày đều đúng**;
+các số liệu nhập tay ngoài phạm vi, fanpage và quy tắc Setsumekai chưa có bằng chứng mới
+trong bộ này không được coi là đã kiểm chứng.
+
+```powershell
+node tool/tests/october11.cjs
+powershell -NoProfile -ExecutionPolicy Bypass -File tool/tests/verify-october11.ps1
+node tool/tests/app-config.cjs
+node tool/tests/chain14.cjs
+node tool/tests/chain15.cjs
+node tool/tests/october.cjs
+```
+
+File sinh để kiểm tra: `tool/tests/artifacts/AltiuslinkVN-20261011.xlsx`.
+Script Excel mở file sinh ra ở chế độ chỉ đọc và không lưu thay đổi.
+Các mục về tháng 09 bên dưới là lịch sử đối chiếu; kết luận nào xung đột phải theo mục này.
+
+## Lịch sử quyết định Start Time sau đối chiếu tháng 09
+
+**Quyết định cũ, đã được thay bằng Requested time từ v6.** Trước xác nhận SBI,
+tool chọn First response time từ các mẫu sau; không thể dùng mẫu này phủ định quy chuẩn mới.
+
+Đã quét đủ 30 file (52.985 phiên chatbot) trong `Tổng hợp dữ liệu tháng/Tháng 09` và file `full tháng`.
+Ghép phiên bằng supporter + End time + sender ID, không dựa vào thứ tự dòng:
+
+| Ngày có Session gốc | Số phiên khớp | Nguồn Start Time trong bản chuẩn |
+|---|---:|---|
+| 13/09 | 1.555/1.555 | First response time |
+| 14/09 | 1.929/1.929 | Requested time |
+| 15/09 | 1.997/1.997 | First response time |
+
+File tổng hợp giữ nguyên Start Time của 30.796 phiên chatbot từ ngày 1–16,
+chưa có phiên chatbot ngày 17–30. Dù tên file là `full tháng`, không dùng nó để
+kết luận phần chưa có dữ liệu. 27 ngày ngoài 13–15 thiếu Session gốc để xác định
+tên cột nguồn; thời lượng phiên dài/ngắn không chứng minh được cột nào đã dùng.
+
+Trong **Cấu hình ánh xạ → Start Time của chatbot**, có thể chọn First response,
+Requested hoặc Assign time. Lựa chọn được lưu, áp dụng sau khi bấm **Xử lý**;
+đổi cấu hình sẽ khóa đầu ra cũ đến khi xử lý lại. Không tự đổi theo ngày hoặc
+theo bản chuẩn. Theo quy chuẩn hiện tại, chọn Requested time cho mọi ngày.
+Chỉ chọn nguồn cũ khi chủ động tái lập một báo cáo lịch sử. Ngày báo cáo tự động không thay đổi.
+
+Trước đây cấu hình bản sửa ngày 14 từng được nâng về First response time.
+Hiện v6 đổi nguồn Start Time trong cấu hình cũ sang Requested time theo SBI,
+không tiếp tục giữ mốc cũ chỉ vì đã lưu trong trình duyệt. Không sửa file dữ liệu gốc.
+
+Kiểm thử: `node tool/tests/audit-month-times.cjs` ghi thống kê không chứa thông tin
+khách hàng vào `tool/tests/artifacts/month-times-audit.json`. Chạy tiếp
+`node tool/tests/chain14.cjs`, `node tool/tests/chain15.cjs`, `node tool/tests/october.cjs`.
+Kiểm tra bộ chọn cấu hình: `node tool/tests/app-config.cjs`. Kiểm tra Excel thật:
+`powershell -NoProfile -ExecutionPolicy Bypass -File tool/tests/verify-chain15.ps1`
+(và `verify-chain14.ps1`, `verify-excel.ps1` cho hai bộ dữ liệu còn lại).
+Ngày 15 khớp đủ 1.997 Start Time; 1 Topic và các chênh lệch nguồn khác vẫn được báo,
+không tự chép bản chuẩn vào đầu ra để làm xanh phép so sánh.
+
+## Bản sửa chain 13/09 → 14/09/2026
+
+- Bản sửa ban đầu dùng `Requested time` để khớp **1.929/1.929** phiên ngày 14.
+  **Quyết định này đã được thay thế bởi mặc định First response time ở mục trên**;
+  ngày 14 sẽ báo 1.929 ô thời gian khác bản chuẩn nếu dùng mặc định mới.
+- Áp dụng bước 9 của flow: đổi đúng tên gắn với `ly.ntk1@altius-link.com.vn`
+  thành `NGUYEN THI KHANH LY (3M)` trong bảng tra **và file xuất**. Sửa đủ 18 email;
+  tại thời điểm bản sửa đó cả 512 email khớp bản chuẩn. Sau khi áp dụng quy tắc 11/10,
+  có 31 case Hoài/Quỳnh giữ tên gốc khác chuẩn 14/09. Sau cập nhật 12/10 còn có
+  20 case Quang giữ tên gốc: tổng 51 case, 102 ô tên/email, cộng 128 ô nguồn khác
+  sẵn thành 230 ô SF lệch. Bộ đối chiếu báo đầy đủ, không miễn trừ. Không sửa file nền.
+  Nếu tên đích đã thuộc email khác, không tự đổi; các tên trùng khác vẫn phải xử lý riêng.
+- `Sheet5!V` tính Setsumekai × 45, đồng bộ với KPI JavaScript và công thức Excel.
+  Hệ số nằm ở `kpi.setsumekaiWeight`; `O` giữ cách cộng `Grand Total-SUM(P:U)+V` của mẫu.
+- Bộ đối chiếu không còn dùng `parseFloat` để so chuỗi thời gian/topic/ID,
+  không coi hai email khác hậu tố là một, và kiểm tra cả dòng thừa/thiếu cuối bảng.
+  KPI thiếu giờ làm vẫn báo lệch, không tự miễn trừ bằng phỏng đoán về bản chuẩn.
+  Sai khác khớp nguồn được ghi rõ vị trí nguồn để kiểm tra.
+
+**Vẫn còn chênh giữa bộ đầu vào hiện có và bản chuẩn, không tự chép bản chuẩn vào kết quả:**
+
+| Vùng | Bằng chứng |
+|---|---|
+| SF | 127 trạng thái + 1 tên khách khác bản chuẩn; đầu ra giữ đúng export Salesforce đang nạp. |
+| CSKH | Bản chuẩn có thêm dòng 2587: Setsumekai của `anh.bn1@`; file OP đang nạp không cung cấp dòng đó. |
+| Other Tasks | 160 dòng đầu vào so với 192 dòng chuẩn. Thiếu 32 dòng giờ của `ly.ntk1@`, `huong.tl@`, `nguyen.nt@`, `anh.np@`. |
+| Giờ làm | `G22` 5/6, `G126` 3/5, `I126` 4/2, `F38` 8/8.00352941176471; `H9` trống/dấu backtick. Các giá trị đầu ra khớp file OP hiện tại. |
+| Summary | Chính CSKH của bản chuẩn có 3 Viber nhưng Summary ghi 0; chatbot có 1.618 sender khác nhau nhưng công thức mẫu dùng 1.619. Tool tính 1.710 thay vì 1.708. |
+| KPI | Với đầu vào hiện có còn 6/39 ô lệch. Phép thử riêng dùng đúng các dòng/giờ trong bản chuẩn khớp **39/39**, gồm KPI Bùi Ngọc Anh 2.204761904761905 và tổng team 1.3095795162459634. |
+
+Kiểm thử bảo toàn 1.690 ô lịch sử (giá trị và công thức) ở hai sheet tổng hợp.
+Đã mở cả đầu ra thật và fixture chẩn đoán bằng Excel, refresh Pivot và tính lại:
+18 email sửa đúng, 38 KPI cá nhân + tổng team khớp giữa ngày/tháng, dòng phụ trống không hiện 0.
+Bộ kiểm thử 04/10 cũng chạy lại đạt.
+
+```powershell
+node tool/tests/chain14.cjs
+node tool/tests/chain14.cjs --compare
+powershell -NoProfile -ExecutionPolicy Bypass -File tool/tests/verify-chain14.ps1
+```
+
+`artifacts/AltiuslinkVN-20260914.xlsx` là đầu ra từ nguồn thực tế.
+`artifacts/chain14-reference-fixture.xlsx` **chỉ là fixture kiểm thử bằng dữ liệu bản chuẩn,
+không phải báo cáo đã hoàn thiện để gửi**. Muốn khớp bản chuẩn cần cung cấp bản OP/Salesforce
+cùng thời điểm chốt, bổ sung các dòng còn thiếu và xác nhận các ô Summary tự mâu thuẫn.
+
+## Bản sửa theo bộ đối chiếu 04/10/2026
+
+- Khối `3. Other Tasks` chép đủ **C:M**, gồm giờ “Khác” ở M; xóa dữ liệu thừa của ngày cũ.
+- Cột phụ `Sheet5!O:V` tra theo **tên kênh**, chịu được pivot thay đổi thứ tự cột.
+  JP khác và Xử lý đăng ký mới vào đúng U/T; KPI tháng dùng định mức JP trong file nền.
+- Cấu hình cũ lưu trong trình duyệt được bổ sung trường còn thiếu, bao gồm tổng hợp Topic;
+  ánh xạ cũ C:L được nâng lên C:M. Các tuỳ chỉnh khác được giữ lại.
+- Bộ nguồn 04/10 có **90 dòng đảo ngày/tháng** (82 dòng CSKH + 8 dòng giờ làm).
+  Để tái tạo ảnh chuẩn, bật **Nhận dòng bị đảo ngày/tháng** trước khi xuất.
+
+Đã mở đầu ra bằng Excel, refresh 4 pivot và tính lại: tổng giờ 4/8/8,
+JP khác 24, XL ĐKM 1, KPI JP 113,08%, Tình trạng thẻ 621, tổng nội dung hỗ trợ 2.167.
+KPI ngày/tháng khớp cả 38 người. Riêng số 615 trong ảnh lỗi không tái hiện với mã nguồn
+hiện tại và bộ nguồn cung cấp; kiểm thử cố định kết quả 621 trước và sau khi Excel tính lại.
+
+Chạy lại từ thư mục gốc dự án (cần Node.js, bước thứ hai cần Excel trên Windows):
+
+```powershell
+node tool/tests/october.cjs
+powershell -NoProfile -ExecutionPolicy Bypass -File tool/tests/verify-excel.ps1
+```
+
+File kiểm thử nằm trong `tool/tests/artifacts/`; dữ liệu nguồn không bị sửa.
+Các số nhập tay và số follow chưa được cung cấp vẫn cần hoàn thiện trước khi gửi báo cáo.
+
+---
+
 Web tool chạy **100% trong trình duyệt**. Nhận file tải từ web + file báo cáo ngày của nhân viên,
 sinh ra file đã làm sạch và 3 khối dữ liệu dán thẳng vào *File báo cáo tổng*.
 Không có server, không cài đặt, không kết nối mạng — dữ liệu khách hàng không rời khỏi máy.
@@ -126,8 +589,9 @@ W = Σ(count/định mức) / Σ(giờ)
 
 Định mức: CSKH 15, Outbound 30, Xử lý case 17, Trả lời Comment 20, ĐKM 20.
 
-Tool chỉ ghi cho người **có trong khối OP của `Daily KPI Result`** (dòng 15–43). Các dòng JP Staff
-hoặc tài khoản ngoài khối đó do nguồn khác điền, tool không đụng vào. Dòng tổng team tính từ
+Tool ghi cho người có email trong `Daily KPI Result`, kể cả người ngoài khối OP.
+JP được tính theo định mức và nguồn số lượng riêng đọc từ công thức trong file nền;
+gặp mẫu công thức chưa hỗ trợ thì tool báo để kiểm tra. Dòng tổng team tính từ
 tổng số lượng và tổng giờ của cả nhóm, không phải trung bình các `W`.
 
 Tool cũng cập nhật ô ngày `A2` của cả hai sheet KPI.
@@ -197,14 +661,16 @@ Ngoài `lỗi bot`, file tổng ngày 15 còn bỏ 1 dòng ghi mỗi `lỗi`. Lu
 
 ## Lỗi đảo ngày/tháng trong file nhân viên
 
-File OP có **1.188/8.677 dòng (13,7%) bị đảo ngày và tháng**. Nguyên nhân là locale Excel: gõ
+Bộ OP tháng 09 đã khảo sát có **1.188/8.677 dòng (13,7%) nghi đảo ngày và tháng**. Một nguyên nhân có thể là locale Excel: gõ
 `9/1/2026` với ý 01/9, Excel kiểu Mỹ đọc thành `m/d` = 09/01 rồi đổi luôn ra số.
 
 Ngày > 12 không dính lỗi (không có tháng 13 nên Excel để nguyên dạng chuỗi), nên **báo cáo ngày 13–31
 không ảnh hưởng**. Ngày 1–12 thì mất dòng — ví dụ ngày 07/9 mất 31%, ngày 04/9 mất 23%.
 
 Tool phát hiện bằng cách: dòng nào có ngày không khớp, nhưng **đảo ngày↔tháng lại ra đúng ngày báo cáo**
-thì đánh dấu. Mặc định chỉ **cảnh báo đỏ** kèm số dòng; tích ô ở bước 2 thì tính luôn vào báo cáo.
+thì đánh dấu. Từ bản cập nhật 11/10, mặc định **nhận các dòng này kèm cảnh báo**;
+bỏ tích ô ở bước 2 để chỉ giữ dòng khớp ngày gốc. Việc đảo ra đúng ngày báo cáo
+không tự chứng minh ngày nguồn bị sai; cần kiểm tra khi file chứa nhiều tháng.
 
 Nên sửa ở gốc: định dạng cột `Date/日付` trong file OP thành Text, hoặc thống nhất nhập `yyyy-mm-dd`.
 
@@ -220,7 +686,7 @@ Tất cả nằm trong `src/config.js`, sửa được qua màn hình **Cấu h�
 - **Tra email supporter**: thay công thức `VLOOKUP` sang sheet `mail SF`, không phân biệt hoa thường.
 - **Đổi tên người lập case** (`requestedByAliases`) — xem mục dưới.
 
-## Hai điều phát hiện khi đối chiếu file mẫu — cần xác nhận
+## Hai điều phát hiện ở file mẫu tháng 09 — ghi nhận lịch sử
 
 **1. Tên tài khoản Salesforce khác tên OP thật.**
 Cột `Requested By` của *File báo cáo tổng* khác cột `Created By` của export ở 38/379 case,
@@ -233,8 +699,9 @@ theo đúng 2 cặp và áp dụng cho 100% số dòng của hai tên đó:
 
 Hai tên đích (`anh.np@`, `nguyen.nt@`) cũng đúng là 2 supporter chỉ có trong file tổng mà không có
 trong file OP mẫu — khớp với giả thiết hai bạn này lập case bằng tài khoản SF khác.
-Tool đang áp dụng quy tắc này và **luôn hiện cảnh báo mỗi lần chạy**.
-Nếu quy tắc sai hoặc đã thay đổi, sửa `requestedByAliases` trong Cấu hình.
+Hai luật từng bị tắt trong v3/v4 theo bằng chứng ngày 11–12/10, nay **được bật lại
+trong v5 theo yêu cầu ưu tiên DataQuyTac**. Mẫu này không chứng minh được phân công
+cố định cho mọi ngày; tool vẫn ghi cảnh báo mỗi lần áp dụng để người dùng kiểm tra.
 
 **2. Lỗi gõ ngày trong file báo cáo ngày của nhân viên.**
 Sheet `3. Other Tasks & Working time` có 80 dòng ghi ngày kiểu `13/09//2026` (hai dấu gạch chéo),

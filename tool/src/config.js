@@ -14,11 +14,16 @@
     /* "auto" = suy ra từ ngày xuất hiện nhiều nhất ở cột First response time
        của Session Report. Hoặc đặt cứng "2026-09-13". */
     reportDate: 'auto',
+    rulesVersion: 6,
+    rulesSource: 'SBI 2026-10-23 — docs/VẤN ĐỀ.docx',
 
     /* --- Nguồn 1: Session Report (chat bot, tải từ FPT.AI Live Support) --- */
     session: {
       sheet: 0,
       headerRow: 1,
+      /* SBI chốt Requested time cho Start Time. Ngày báo cáo vẫn nhận từ
+         First response time; không suy ra giờ KPI từ độ dài phiên chat. */
+      startTimeMappingVersion: 3,
       dateColumn: 'First response time',
       /* Dòng khớp BẤT KỲ luật nào dưới đây sẽ bị loại.
          op: equalsIgnoreCase | equals | contains | isEmpty | regex */
@@ -35,7 +40,7 @@
         { out: 'TYPE', from: 'const', value: 'CHAT BOT' },
         { out: 'Customer', from: 'Customer' },
         { out: 'Supporter', from: 'Supporter' },
-        { out: 'First response time', from: 'First response time' },
+        { out: 'Requested time', from: 'Requested time' },
         { out: 'End time', from: 'End time' },
         { out: 'Description', from: 'Description' },
         { out: 'Notes', from: 'Notes' },
@@ -72,32 +77,32 @@
       nameTrimPattern: '[.,;\\s]+$'
     },
 
-    /* Tên tài khoản Salesforce -> tên OP thật (flow.md bước 16).
-     * Phát hiện khi đối chiếu file mẫu: cột `Requested By` của File báo cáo tổng khác
-     * cột `Created By` của export đúng theo các cặp dưới đây. Hai tên đích đầu
-     * (anh.np@, nguyen.nt@) cũng chính là 2 supporter chỉ xuất hiện ở File báo cáo tổng
-     * mà không có trong file OP — khớp với giả thiết hai bạn này lập case bằng tài
-     * khoản SF khác.
-     *
-     * LƯU Ý khi đối chứng: file tổng do người làm tay nên áp dụng KHÔNG nhất quán.
-     * Ví dụ 15/9, LUU NGOC QUANG có 34 case nhưng chỉ 23 case đầu (tới dòng 325)
-     * được đổi tên, 11 case từ dòng 334 trở đi giữ nguyên — cắt theo vị trí dòng chứ
-     * không theo dữ liệu, tức là sửa tay rồi bỏ dở. Tool luôn đổi đủ 100%.
-     *
-     * Xoá cặp ở đây nếu quy tắc không còn đúng. */
+    /* Bộ DataQuyTac được ưu tiên hơn các mẫu cũ: 19/19 case Quỳnh -> Anh,
+       19/19 case Quang -> Nguyên; 6/6 case Hoài giữ nguyên. Không suy đoán
+       cách chia 62 case Khánh Ly giữa hai email chỉ từ tên người lập. */
     requestedByAliases: {
       'VU NHU QUYNH': 'NGUYEN PHUONG ANH',
       'LUU NGOC QUANG': 'NGUYEN THAO NGUYEN',
-      /* Quy trình nghiệp vụ (flow.md bước 16) ghi "Nguyen Thi Thu Hoai" nhưng export
-         Salesforce ghi "Pham Thi Thu Hoai" — cùng một người, `mail SF` chỉ có một
-         Hoài duy nhất (hoai.ptt@altius-link.vn). Đối chiếu 3 ngày:
-             13/9  0/6  case được đổi
-             14/9  18/18 đổi
-             15/9  0/10 đổi
-         Nghĩa là ngày 13 và 15 người làm QUÊN áp dụng, chứ luật thì quy trình có ghi.
-         Tool áp dụng nhất quán; khi đối chứng với file ngày 13/15 sẽ thấy lệch ở đây
-         và phần đối chứng xếp riêng vào nhóm "giải thích được". Đặt `false` để tắt. */
-      'PHAM THI THU HOAI': 'TRAN LAN HUONG'
+      'PHAM THI THU HOAI': false
+    },
+
+    /* Điều chỉnh đã được xác nhận bằng output chuẩn mới, KHÔNG phải luật suy đoán.
+       Khóa theo ngày + Case Number / email + cột + giá trị gốc, không theo số dòng.
+       Có thể tắt toàn bộ hoặc sửa danh sách trong Cấu hình JSON. */
+    approvedAdjustments: {
+      enabled: false,
+      source: '',
+      cases: [],
+      hours: []
+    },
+
+    /* Chỉ cảnh báo, KHÔNG sửa dữ liệu theo đáp án. Kết luận SBI ngày 23/10.
+       Mục giờ được khóa theo ngày + email + cột + giá trị nguồn, không theo dòng. */
+    sourceReviews: {
+      customerFeedbackTopic: true,
+      hours: [{ date: '2026-10-12', email: 'nguyen.nt@altius-link.com.vn',
+        column: 6, from: 5, reference: 5.24,
+        reason: 'SBI xác nhận nhân viên nhập sai giờ hỗ trợ trong bộ ngày 12/10. Cần sửa và lưu file OP đã xác nhận; tool không tự đổi 5 thành 5.24.' }]
     },
 
     /* --- Nguồn 3: file báo cáo ngày của nhân viên (SBI DAILY REPORT_MMYY) --- */
@@ -112,9 +117,10 @@
         /* Cột luôn ghi trống, bất kể nguồn có gì (xem `blankColumns` ở `other`). */
         blankColumns: [13]
       },
-      /* Nhận cả dòng bị đảo ngày/tháng (lỗi locale khi nhập liệu).
-       * Bật/tắt bằng ô tích ở bước 2. Dù bật hay tắt, tool luôn báo số dòng dính lỗi. */
-      acceptSwappedDates: false,
+      /* Bật mặc định theo bộ 11/10: 86 dòng CSKH + 16 dòng giờ bị đảo ngày/tháng.
+       * Có thể tắt bằng checkbox nếu nguồn có dữ liệu ngày đảo hợp lệ khác.
+       * Dù bật hay tắt, tool luôn báo số dòng bị ảnh hưởng để kiểm tra. */
+      acceptSwappedDates: true,
       other: {
         sheet: '3. Other Tasks & Working time',
         headerRow: 5,
@@ -122,16 +128,19 @@
         dateColumn: 'DATE',
         /* Mỗi supporter chiếm đúng 1 khối liên tiếp bấy nhiêu dòng */
         blockSize: 8,
-        /* Cột nguồn (0-based) đem sang khối 3, tương ứng cột C..L của đích.
+        /* Cột nguồn (0-based) đem sang khối 3, tương ứng cột C..M của đích.
            Index 2 là DATE - sẽ được ghi đè bằng serial ngày báo cáo. */
-        copyColumns: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        copyColumns: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
         /* Index 3 = cột TEAM. Cột này TRỐNG 100% trong cả 3 file tổng đã đối chiếu
            (152 + 192 + 192 dòng ở "3. Other Tasks", 2218 + 2577 + 2741 dòng ở
            "1. CSKH") — tức là cột chết, không ai dùng. Nhưng file OP nguồn lại có
            16 ô bị gõ nhầm vào đó (9 ô dấu ` và 7 ô số 6, đều do OP nhập nhầm phím).
            Chép nguyên si thì rác lọt vào báo cáo, nên luôn ghi trống.
            Bỏ index ra khỏi mảng này nếu sau này cột TEAM thật sự được dùng. */
-        blankColumns: [3]
+        blankColumns: [3],
+        /* DataQuyTac: số 0 ở cột M (giờ việc khác) được trình bày là ô trống.
+           Chỉ đổi cách hiển thị 0 ở cột này, không xóa giờ hoặc điền giờ còn thiếu. */
+        zeroAsBlankColumns: [12]
       }
     },
 
@@ -289,6 +298,9 @@
      *
      * Đã đối chiếu ngày 13/9: khớp 32/32 người, mọi cột trung gian đúng. */
     kpi: {
+      /* Sheet5!V = số buổi Setsumekai * 45 (bản chuẩn 14/9).
+         O cộng V ngoài số dòng đã nằm trong Grand Total, theo công thức mẫu. */
+      setsumekaiWeight: 45,
       /* 5 mảng KPI: [nguồn số lượng, cột giờ trong khối 3, định mức/giờ] */
       tracks: [
         { key: 'cskh', count: 'H', hoursColumn: 4, rate: 15 },
@@ -303,9 +315,9 @@
       otherChannels: ['JP khác'],
       /* Sheet KPI ngày — chỉ đọc để lấy danh sách người và cập nhật ô ngày.
        *
-       * Hai biên khác nhau, đừng gộp làm một:
-       *   dataStartRow..dataEndRow = KHỐI OP, đúng bằng vùng của dòng tổng
-       *       `=SUM(E15:E43)` ở dòng 14. Chỉ dùng để tính dòng tổng team.
+       * Hai danh sách khác nhau, đừng gộp làm một:
+       *   KHỐI OP = tập dòng của các công thức SUM ở totalRow trong file nền.
+       *       Mẫu tháng 09: 15–43; mẫu tháng 10: 15–42. Không lấy biên cố định.
        *   dataStartRow..peopleEndRow = TOÀN BỘ người có dòng KPI. Sheet còn người
        *       ở dòng 44-54 (DO PHUONG LINH, DO TU UYEN, LE VAN LONG, DUONG HUY,
        *       ly.ntk1, TRAN LAN HUONG, NGUYEN THAO NGUYEN, NGUYEN PHUONG ANH,
@@ -320,16 +332,14 @@
         /* ô ngày của sheet này đã nằm trong `dateHeaderCells` */
         emailColumn: 3,
         dataStartRow: 15,
+        /* Biên dự phòng cho danh sách cá nhân nếu thiếu peopleEndRow.
+           Phạm vi tổng team luôn đọc từ công thức SUM trong file nền. */
         dataEndRow: 43,
         peopleEndRow: 60,
         totalRow: 14,
-        /* Cột chứa hiệu suất từng mảng (J, M, P, S, V) — mỗi cột là một công thức
-         * dạng `=<số lượng>/(<giờ>*<định mức>)`. Tool đọc ngược định mức từ đây để
-         * biết dòng nào đang dùng định mức KHÁC với `tracks` ở trên.
-         * Có thật: dòng 54 (NGO QUOC BAO) dùng 10/10/10/15/20 và tra cột Sheet5
-         * khác hẳn — ổn định qua cả 3 ngày 13/14/15, tức là một cơ chế KPI riêng
-         * chứ không phải gõ nhầm. Tool KHÔNG ghi cho những dòng như vậy: ghi số
-         * tính theo định mức chuẩn sẽ sai (0.74 thay vì 1.86). */
+        /* Đọc định mức riêng từ J/M/P/S/V và nguồn số lượng H/K/N/Q/T.
+         * JP dùng 10/10/10/15/20, K lấy JP khác và Q lấy XL DKM.
+         * Mẫu công thức đã hiểu được tính riêng để ghi KPI tháng; mẫu lạ báo lại. */
         rateColumns: [9, 12, 15, 18, 21]
       },
       /* Sheet KPI tháng — tên đổi theo tháng (202609, 202610…) nên dò bằng mẫu */
@@ -366,16 +376,11 @@
       { sheet: 'Daily KPI Result', cell: 'A2' }
     ],
 
-    /* --- Sheet5: cột phụ phải phủ hết số dòng của pivot ---
-     * Pivot đếm CHANNEL theo email nằm ở cột A..I, còn cột phụ O..V là công thức
-     * do người làm kéo tay. Hiện cột phụ phủ VỪA ĐỦ pivot, dư 0 dòng — nên chỉ cần
-     * hôm nào có thêm một supporter là người mới đó không có giá trị HTKH, kéo theo
-     * "Daily KPI Result" tính sai. Tool kéo sẵn công thức xuống cho dư chỗ. */
+    /* Sheet5: O:V tra kênh theo nhãn ở B4:N4 và phủ tới dòng 70.
+     * Pivot có thể đổi thứ tự cột khi thêm/bớt kênh mỗi ngày. */
     sheet5: {
       sheet: 'Sheet5',
-      /* dòng đầu vùng pivot — tool dò từ đây xuống để tìm dòng cuối còn công thức,
-         rồi lấy CHÍNH dòng cuối đó làm mẫu (giống thao tác kéo từ đáy bảng).
-         Không lấy dòng 5 làm mẫu: file 15/9 dòng 5-9 còn giữ công thức cũ. */
+      /* Dòng đầu dữ liệu pivot. Header kênh nằm ở dòng 4. */
       templateRow: 5,
       columns: [14, 15, 16, 17, 18, 19, 20, 21],   /* O..V */
       /* Trần an toàn: VLOOKUP của "Daily KPI Result" chỉ tra tới Sheet5!$A$2:$S$73,
@@ -400,7 +405,12 @@
 
     /* Vị trí bảng tra tên -> email trong File báo cáo tổng. Tool đọc bảng này mỗi
        lần chạy để soát tên trùng — tên trùng làm VLOOKUP gán case sai người. */
-    mailSf: { sheet: 'mail SF', startRow: 3, nameColumn: 2, emailColumn: 3 },
+    mailSf: {
+      sheet: 'mail SF', startRow: 3, nameColumn: 2, emailColumn: 3,
+      /* Không tự đổi tên trùng thành tài khoản mới. Cần khóa phân công case
+         từ nguồn để tách hai email; giữ bảng tra và cảnh báo khi chưa có. */
+      nameCorrections: []
+    },
 
     /* Bảng tra tên -> email, lấy từ sheet ẩn `mail SF` của File báo cáo tổng.
        Tra không phân biệt hoa thường và gộp khoảng trắng, giống VLOOKUP của Excel. */
@@ -458,10 +468,81 @@
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
+  /* Nâng các ánh xạ mặc định cũ; giữ mọi tuỳ chỉnh khác của người dùng. */
+  function migrate(config) {
+    var cfg = clone(config);
+    var startVersion = cfg.session && cfg.session.startTimeMappingVersion || 0;
+    var rulesVersion = cfg.rulesVersion || 0;
+    function addMissing(target, defaults) {
+      Object.keys(defaults).forEach(function (key) {
+        if (target[key] === undefined) target[key] = clone(defaults[key]);
+        else if (target[key] && defaults[key] && typeof target[key] === 'object' &&
+                 !Array.isArray(target[key]) && !Array.isArray(defaults[key])) {
+          addMissing(target[key], defaults[key]);
+        }
+      });
+    }
+    addMissing(cfg, DEFAULT_CONFIG);
+    var other = cfg.op && cfg.op.other;
+    if (other && JSON.stringify(other.copyColumns) === '[2,3,4,5,6,7,8,9,10,11]') {
+      other.copyColumns.push(12);
+    }
+    var start = cfg.session.stagingColumns[3];
+    if (startVersion < 2 && start && start.out === 'Requested time' && start.from === 'Requested time') {
+      /* Chỉ hoàn nguyên đúng ánh xạ mặc định của bản sửa ngày 14 đã phát hành.
+         Cấu hình v2 hoặc ánh xạ tuỳ chỉnh khác không bị ghi đè. */
+      start.out = 'First response time';
+      start.from = 'First response time';
+    }
+    if (startVersion < 2) cfg.session.startTimeMappingVersion = 2;
+    if (rulesVersion < 3) {
+      /* Nâng mặc định cũ theo bộ 11/10. Các cấu hình v3 tự chỉnh giữ nguyên. */
+      if (cfg.requestedByAliases['VU NHU QUYNH'] === 'NGUYEN PHUONG ANH') cfg.requestedByAliases['VU NHU QUYNH'] = false;
+      if (cfg.requestedByAliases['PHAM THI THU HOAI'] === 'TRAN LAN HUONG') cfg.requestedByAliases['PHAM THI THU HOAI'] = false;
+      cfg.op.acceptSwappedDates = true;
+      cfg.rulesVersion = 3;
+    }
+    if (rulesVersion < 4) {
+      /* Chỉ tắt đúng luật mặc định cũ; không ghi đè tên đích do người dùng tự đặt. */
+      if (cfg.requestedByAliases['LUU NGOC QUANG'] === 'NGUYEN THAO NGUYEN') cfg.requestedByAliases['LUU NGOC QUANG'] = false;
+      cfg.rulesVersion = 4;
+    }
+    if (rulesVersion < 5) {
+      /* Chỉ thay các mặc định đã phát hành; giữ tên đích tùy chỉnh khác.
+         Cấu hình v5 tự tắt alias sẽ không bị bật lại khi tải trang. */
+      ['VU NHU QUYNH', 'LUU NGOC QUANG'].forEach(function (name) {
+        if (cfg.requestedByAliases[name] === false) cfg.requestedByAliases[name] = DEFAULT_CONFIG.requestedByAliases[name];
+      });
+      if (cfg.requestedByAliases['PHAM THI THU HOAI'] === 'TRAN LAN HUONG') cfg.requestedByAliases['PHAM THI THU HOAI'] = false;
+      if (cfg.approvedAdjustments.source === 'ExtraData/Daily Report 11.10.2026/Output') {
+        /* Giữ danh sách để kiểm tra lại, nhưng không còn tự áp dụng ngoại lệ cũ. */
+        cfg.approvedAdjustments.enabled = false;
+      }
+      cfg.mailSf.nameCorrections = cfg.mailSf.nameCorrections.filter(function (rule) {
+        return !(rule.email === 'ly.ntk1@altius-link.com.vn' && rule.from === 'NGUYEN THI KHANH LY' && rule.to === 'NGUYEN THI KHANH LY (3M)');
+      });
+      cfg.rulesVersion = 5;
+      cfg.rulesSource = 'DataQuyTac';
+    }
+    if (rulesVersion < 6) {
+      /* Quy chuẩn SBI mới thay nguồn Start Time cũ, kể cả lựa chọn đã lưu.
+         Sau khi nâng v6, lựa chọn chủ động của người dùng không bị đổi lại. */
+      cfg.session.stagingColumns[3] = { out: 'Requested time', from: 'Requested time' };
+      cfg.session.startTimeMappingVersion = 3;
+      if (cfg.approvedAdjustments.source === 'ExtraData/Daily Report 11.10.2026/Output') {
+        cfg.approvedAdjustments.enabled = false;
+      }
+      cfg.rulesVersion = 6;
+      cfg.rulesSource = DEFAULT_CONFIG.rulesSource;
+    }
+    return cfg;
+  }
+
   return {
     DEFAULT_CONFIG: DEFAULT_CONFIG,
     MAIL_SF: MAIL_SF,
     defaults: function () { return clone(DEFAULT_CONFIG); },
+    migrate: migrate,
     clone: clone
   };
 });
